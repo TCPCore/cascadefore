@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 
 import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
+import { createGraphSource } from '../src/graph/source';
+import { createRecordedCaller, SANDBOX_PAGES } from '../src/graph/sandbox';
 import { parseIntentLocally } from '../src/domain/intent';
 import type { RunSnapshotDto } from '../src/shared/dtos';
 import type { Horizon } from '../src/shared/types';
@@ -26,6 +28,26 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const WEB_ROOT = join(ROOT, 'static', 'panel', 'build-web');
 const PORT = Number(process.env.PORT ?? 4173);
 const DEMO_WORK_ITEM = process.env.CASCADE_WORK_ITEM ?? 'CX-11';
+
+/**
+ * Which sandbox layer to run:
+ *   artifacts (default) → seeded artefacts, bypasses the graph client entirely
+ *   recorded            → recorded Teamwork Graph payloads through the real
+ *                         transport: paging, retries, scope probe and row
+ *                         mapping all execute exactly as in production
+ */
+const SOURCE = process.env.CASCADE_SOURCE === 'recorded' ? 'recorded' : 'artifacts';
+
+function buildSource() {
+  if (SOURCE === 'recorded') {
+    return createGraphSource(
+      createRecordedCaller(SANDBOX_PAGES),
+      { spine: 'spine', branches: 'branches', outcomes: 'outcomes' },
+      { now: () => new Date().toISOString() },
+    );
+  }
+  return createDemoSource();
+}
 
 const runs = new Map<string, RunSnapshotDto>();
 
@@ -98,7 +120,7 @@ async function handleRun(req: IncomingMessage, res: ServerResponse): Promise<voi
     const result = await runPipeline(
       { runId, workItemKey, eventKind, intentText, horizon, failureAt: createdAt, createdAt },
       {
-        source: createDemoSource(),
+        source: buildSource(),
         parseIntent: async (text, h) => parseIntentLocally(text, h),
         now: () => new Date().toISOString(),
       },
@@ -146,4 +168,5 @@ server.listen(PORT, () => {
   console.log(`Cascade standalone listening on http://localhost:${PORT}`);
   console.log(`  panel bundle: ${WEB_ROOT}`);
   console.log(`  demo work item: ${DEMO_WORK_ITEM}`);
+  console.log(`  source: ${SOURCE}  (set CASCADE_SOURCE=recorded for the graph sandbox)`);
 });
