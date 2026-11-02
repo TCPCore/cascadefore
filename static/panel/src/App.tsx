@@ -6,6 +6,7 @@ import { getRun, health, isStandalone, startCascade, type Health } from './api';
 import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
+import { CaseBase } from './components/CaseBase';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
@@ -34,6 +35,7 @@ export function App(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('tree');
   const [elapsed, setElapsed] = useState(0);
+  const [mode, setMode] = useState<'run' | 'cases'>('run');
 
   useEffect(() => {
     void health().then((state) => {
@@ -112,6 +114,25 @@ export function App(): JSX.Element {
         </div>
       </header>
 
+      <nav className="modes" aria-label="View">
+        <button
+          className={`mode ${mode === 'run' ? 'mode--active' : ''}`}
+          onClick={() => setMode('run')}
+        >
+          Reconstruction
+        </button>
+        <button
+          className={`mode ${mode === 'cases' ? 'mode--active' : ''}`}
+          onClick={() => setMode('cases')}
+        >
+          Case base
+        </button>
+      </nav>
+
+      {mode === 'cases' && <CaseBase />}
+
+      {mode === 'run' && (
+      <>
       <section className="card">
         <label className="field">
           <span>What are you trying to achieve?</span>
@@ -224,6 +245,8 @@ export function App(): JSX.Element {
             )}
           </footer>
         </>
+      )}
+      </>
       )}
     </div>
   );

@@ -97,11 +97,11 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-030 | `DecisionContext` + structured similarity + `findSimilar` | [x] | 1d | DAC-010 |
 | DAC-031 | Laplace confidence + ratio-guarded pattern extraction | [x] | 1d | DAC-030 |
 | DAC-032 | `growthCurve` over decision-ordered prefixes | [x] | 0.5d | DAC-031 |
-| DAC-033 | Retrieval/pattern unit tests (curve shape, guards) | [~] | 0.5d | DAC-031 |
+| DAC-033 | Retrieval/pattern unit tests (curve shape, guards) | [x] | 0.5d | DAC-031 |
 | DAC-034 | Forge SQL schema for `decisions`, `outcomes`, `patterns` | [ ] | 1d | DAC-040 |
 | DAC-035 | Case-base repository (insert/query) + migration runner | [ ] | 1d | DAC-034 |
 | DAC-036 | Ingest: Confluence mirror → case base on demand | [ ] | 1d | DAC-028, DAC-035 |
-| DAC-037 | Case-base UI: list, status, growth curve, "similar to this" | [ ] | 1.5d | DAC-033 |
+| DAC-037 | Case-base UI: list, status, growth curve, "similar to this" | [x] | 1.5d | DAC-033 |
 
 **Gate E3:** 4 decisions retrieve ≥2 similar + 1 pattern; a violation moves confidence. Demoable on :4173. (Screenshot.)
 
@@ -182,6 +182,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 ## 8. Tracking convention
 
+- **Sandbox-first:** no `forge deploy`/`forge install` against production until explicitly approved. All development happens in the local host (:4173 / :4174) and, when needed, the `development` environment.
 - Work top-down through the table; commit messages reference task ids (`DAC-026: commit statuses`).
 - A task moves `[ ] → [~] → [x]`; a `[!]` gets a one-line reason and its blocker id.
 - Every Friday, or at each milestone, update this file and push before doing anything else.

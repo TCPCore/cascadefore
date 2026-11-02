@@ -24,10 +24,16 @@ export interface PatternOptions {
   similarityFloor: number;
 }
 
+/**
+ * The floor is deliberately low because bucketing is structural: a bucket is a
+ * single shared domain or constraint, so two decisions that share nothing
+ * produce no bucket at all. The floor only filters pairs whose *only* overlap
+ * is incidental term noise.
+ */
 export const DEFAULT_PATTERN_OPTIONS: PatternOptions = {
   minSupport: 3,
   minRatio: 0.6,
-  similarityFloor: 0.5,
+  similarityFloor: 0.25,
 };
 
 /** Laplace-smoothed confidence. */
@@ -36,29 +42,34 @@ export function confidenceOf(support: number, refutations: number): number {
 }
 
 interface Bucket {
-  signature: string;
-  statuses: Map<string, Set<string>>;
-  parts: string[];
+  part: string;
+  ids: Map<string, Set<string>>;
 }
 
-function signatureParts(a: Decision, b: Decision): string[] {
-  const sharedDomain = a.domain.filter((d) => b.domain.includes(d)).map((d) => `domain:${d}`);
-  const sharedConstraints = a.constraints
-    .filter((c) => b.constraints.includes(c))
-    .map((c) => `constraint:${c}`);
-  return [...sharedDomain, ...sharedConstraints].sort();
+function partsOf(decision: Decision): string[] {
+  return [
+    ...decision.domain.map((d) => `domain:${d}`),
+    ...decision.constraints.map((c) => `constraint:${c}`),
+  ];
 }
 
-function signatureFor(parts: readonly string[]): string {
-  return parts.join('|');
+function hasPart(decision: Decision, part: string): boolean {
+  return partsOf(decision).includes(part);
 }
 
-function comparable(decision: Decision, parts: readonly string[]): boolean {
-  const domains = new Set(decision.domain.map((d) => `domain:${d}`));
-  const constraints = new Set(decision.constraints.map((c) => `constraint:${c}`));
-  return parts.some((part) => domains.has(part) || constraints.has(part));
+function labelOf(part: string): string {
+  return part.replace('domain:', '').replace('constraint:', '');
 }
 
+/**
+ * One pattern per shared *part*, not per shared *combination*.
+ *
+ * Bucketing on the exact shared set fragments support: two decisions sharing a
+ * domain and a constraint land in a different bucket from two sharing only the
+ * domain, so a corpus of five splits into slivers and nothing ever reaches the
+ * support threshold. Bucketing per part is both simpler and the thing the claim
+ * actually says: "decisions tagged X tend to hold".
+ */
 export function extractPatterns(
   decisions: readonly Decision[],
   options: PatternOptions = DEFAULT_PATTERN_OPTIONS,
@@ -67,6 +78,13 @@ export function extractPatterns(
   if (teachable.length < options.minSupport) return [];
 
   const buckets = new Map<string, Bucket>();
+  const attach = (part: string, decision: Decision): void => {
+    const bucket = buckets.get(part) ?? { part, ids: new Map() };
+    const ids = bucket.ids.get(decision.status) ?? new Set<string>();
+    ids.add(decision.id);
+    bucket.ids.set(decision.status, ids);
+    buckets.set(part, bucket);
+  };
 
   for (let i = 0; i < teachable.length; i += 1) {
     for (let j = i + 1; j < teachable.length; j += 1) {
@@ -76,44 +94,38 @@ export function extractPatterns(
       const { score } = similarity(contextOf(a), contextOf(b));
       if (score < options.similarityFloor) continue;
 
-      const parts = signatureParts(a, b);
-      if (parts.length === 0) continue;
-
-      const key = signatureFor(parts);
-      const bucket = buckets.get(key) ?? { signature: key, statuses: new Map(), parts };
-      const ids = bucket.statuses.get(a.status) ?? new Set<string>();
-      ids.add(a.id);
-      ids.add(b.id);
-      bucket.statuses.set(a.status, ids);
-      buckets.set(key, bucket);
+      for (const part of partsOf(a).filter((p) => hasPart(b, p))) {
+        attach(part, a);
+        attach(part, b);
+      }
     }
   }
 
   const patterns: Pattern[] = [];
 
   for (const bucket of buckets.values()) {
-    const population = teachable.filter((d) => comparable(d, bucket.parts));
-    for (const [status, ids] of bucket.statuses) {
+    const population = teachable.filter((d) => hasPart(d, bucket.part));
+    for (const [status, ids] of bucket.ids) {
       const support = ids.size;
       if (support < options.minSupport) continue;
+
       const refutations = population.filter((d) => d.status !== status).length;
       const ratio = population.length === 0 ? 0 : support / population.length;
       if (ratio < options.minRatio) continue;
 
-      const label = bucket.parts
-        .map((p) => p.replace('domain:', '').replace('constraint:', ''))
-        .join(', ');
+      const label = labelOf(bucket.part);
+      const total = support + refutations;
 
       const patternText =
         status === 'enforced'
-          ? `Decisions tagged ${label} have held ${support} of ${support + refutations} times. Reuse the tests that enforced them.`
-          : `Decisions tagged ${label} have been violated ${support} of ${support + refutations} times. The constraints may be under-specified — add a test before committing.`;
+          ? `Decisions tagged ${label} have held ${support} of ${total} times. Reuse the tests that enforced them.`
+          : `Decisions tagged ${label} have been violated ${support} of ${total} times. The constraints may be under-specified — add a test before committing.`;
 
       patterns.push({
-        id: `pat-${bucket.signature.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${status}`,
+        id: `pat-${bucket.part.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${status}`,
         patternText,
-        domain: bucket.parts.filter((p) => p.startsWith('domain:')).map((p) => p.slice(7)),
-        constraints: bucket.parts.filter((p) => p.startsWith('constraint:')).map((p) => p.slice(11)),
+        domain: bucket.part.startsWith('domain:') ? [label] : [],
+        constraints: bucket.part.startsWith('constraint:') ? [label] : [],
         evidenceDecisionIds: [...ids].sort(),
         confidence: confidenceOf(support, refutations),
         confirmations: support,
@@ -122,7 +134,9 @@ export function extractPatterns(
     }
   }
 
-  return patterns.sort((a, b) => b.confidence - a.confidence || b.confirmations - a.confirmations);
+  return patterns.sort(
+    (a, b) => b.confidence - a.confidence || b.confirmations - a.confirmations || a.id.localeCompare(b.id),
+  );
 }
 
 export interface GrowthPoint {
@@ -135,6 +149,10 @@ export interface GrowthPoint {
  * The growth curve: patterns recomputed over the corpus as it existed after
  * each decision was added, in decision order. This is what "the case base
  * accumulates evidence" looks like as a number.
+ *
+ * An orphaned decision is excluded from the teachable set, so adding one leaves
+ * the curve flat — which is the honest result: the case base cannot learn from
+ * a decision nobody can check.
  */
 export function growthCurve(
   decisions: readonly Decision[],

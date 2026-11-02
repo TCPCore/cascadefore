@@ -12,6 +12,54 @@ declare const __STANDALONE__: boolean;
  * Everything above this file is host-agnostic, which is why the same components
  * render in both places.
  */
+export interface DecisionRow {
+  id: string;
+  decision: string;
+  status: 'enforced' | 'violated' | 'orphaned' | 'unknown';
+  decidedAt: string;
+  domain: string[];
+  constraints: string[];
+  rationale: string;
+  passed: number;
+  failed: number;
+  skipped: number;
+  results: Array<{ name: string; kind: string; passed: boolean; skipped: boolean; evidence: string; onFail?: string }>;
+}
+
+export interface PatternRow {
+  id: string;
+  patternText: string;
+  domain: string[];
+  constraints: string[];
+  evidenceDecisionIds: string[];
+  confidence: number;
+  confirmations: number;
+  refutations: number;
+}
+
+export interface GrowthPointRow {
+  n: number;
+  patternCount: number;
+  top: { id: string; confidence: number; confirmations: number; refutations: number } | null;
+}
+
+export interface DecisionReport {
+  decisions: DecisionRow[];
+  patterns: PatternRow[];
+  growth: GrowthPointRow[];
+  counts: Record<string, number>;
+  testability: { rate: number; testable: number; total: number };
+  generatedAt: string;
+}
+
+export interface SimilarRow {
+  id: string;
+  decision: string;
+  status: string;
+  score: number;
+  because: string[];
+}
+
 export interface Health {
   demoMode: boolean;
   configured: boolean;
@@ -32,9 +80,9 @@ const standalone = isStandalone;
  * The bridge is imported lazily so that a plain browser never evaluates a
  * module that expects to run inside an Atlassian iframe.
  */
-async function bridgeInvoke<T>(key: string, payload?: unknown): Promise<T> {
+async function bridgeInvoke<T>(key: string, payload?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import('@forge/bridge');
-  return (await invoke(key, payload)) as T;
+  return (await invoke(key, payload as never)) as T;
 }
 
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -89,6 +137,40 @@ export async function getRun(runId: string): Promise<{
     return jsonFetch(`/api/runs/${encodeURIComponent(runId)}`);
   }
   return await bridgeInvoke<{ snapshot?: RunSnapshotDto; error?: string; message?: string }>('getRun', { runId });
+}
+
+export async function getDecisionReport(): Promise<DecisionReport | null> {
+  if (standalone) {
+    try {
+      return await jsonFetch<DecisionReport>('/api/decisions');
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return await bridgeInvoke<DecisionReport>('decisionReport');
+  } catch {
+    return null;
+  }
+}
+
+export async function getSimilar(id: string): Promise<SimilarRow[]> {
+  if (standalone) {
+    try {
+      const result = await jsonFetch<{ similar: SimilarRow[] }>(
+        `/api/decisions/similar?id=${encodeURIComponent(id)}`,
+      );
+      return result.similar;
+    } catch {
+      return [];
+    }
+  }
+  try {
+    const result = await bridgeInvoke<{ similar: SimilarRow[] }>('similarDecisions', { id });
+    return result.similar;
+  } catch {
+    return [];
+  }
 }
 
 export async function waitForRun(

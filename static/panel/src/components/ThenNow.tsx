@@ -1,4 +1,4 @@
-import type { RunSnapshotDto } from '../../../src/shared/dtos';
+import type { RunSnapshotDto } from '../../../../src/shared/dtos';
 
 interface Props {
   snapshot: RunSnapshotDto;

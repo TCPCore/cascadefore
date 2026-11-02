@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { BranchViewDto, RunSnapshotDto } from '../../../src/shared/dtos';
+import type { BranchViewDto, RunSnapshotDto } from '../../../../src/shared/dtos';
 
 interface Props {
   snapshot: RunSnapshotDto;

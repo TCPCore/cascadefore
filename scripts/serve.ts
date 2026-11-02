@@ -19,6 +19,7 @@ import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
 import { createGraphSource } from '../src/graph/source';
 import { createRecordedCaller, SANDBOX_PAGES } from '../src/graph/sandbox';
+import { buildDecisionReport, findSimilarFor } from '../src/decisions/service';
 import { parseIntentLocally } from '../src/domain/intent';
 import type { RunSnapshotDto } from '../src/shared/dtos';
 import type { Horizon } from '../src/shared/types';
@@ -50,6 +51,13 @@ function buildSource() {
 }
 
 const runs = new Map<string, RunSnapshotDto>();
+
+/** The case base is deterministic, so it is computed once and served from memory. */
+let caseBase: Awaited<ReturnType<typeof buildDecisionReport>> | null = null;
+async function getCaseBase() {
+  if (!caseBase) caseBase = await buildDecisionReport();
+  return caseBase;
+}
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -137,6 +145,25 @@ const server = createServer((req, res) => {
 
   if (url === '/api/health') {
     sendJson(res, 200, { demoMode: true, configured: true, probeTypes: [], workItemKey: DEMO_WORK_ITEM });
+    return;
+  }
+
+  if (url === '/api/decisions') {
+    void getCaseBase().then(
+      (report) => sendJson(res, 200, report),
+      (error: unknown) =>
+        sendJson(res, 500, { error: 'CASE_BASE_FAILED', message: error instanceof Error ? error.message : String(error) }),
+    );
+    return;
+  }
+
+  if (url.startsWith('/api/decisions/similar')) {
+    const id = new URL(url, 'http://localhost').searchParams.get('id') ?? '';
+    void findSimilarFor(id).then(
+      (result) => sendJson(res, 200, result),
+      (error: unknown) =>
+        sendJson(res, 500, { error: 'SIMILAR_FAILED', message: error instanceof Error ? error.message : String(error) }),
+    );
     return;
   }
 

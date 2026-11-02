@@ -6,15 +6,19 @@ import type { FileMatchTest } from './types';
 /**
  * A small, honest corpus.
  *
- * Five decisions about the same datastore, in decision order, arranged so the
- * growth curve actually moves: three hold, a fourth is violated, a fifth holds
- * again. Nothing here is randomised — every number the demo shows is
- * reproducible from these strings.
+ * Six decisions in decision order, arranged so the growth curve actually moves:
+ * three hold, the fourth is violated (confidence drops), the fifth holds again
+ * (confidence recovers), and the sixth is orphaned (the curve does not move,
+ * because a decision nobody can check teaches the case base nothing).
+ *
+ * Nothing here is randomised — every number the demo shows is reproducible from
+ * these strings.
  */
 
 const FIXTURE_FILES: Record<string, string> = {
   'infra/docker-compose.yml': `services:\n  db:\n    image: postgres:16\n    ports: ["5432:5432"]\n`,
   'config/session.yml': `driver: redis\nhost: cache-01\n`,
+  'infra/kafka/topics.yaml': `topics:\n  - name: ledger.events\n    partitions: 12\n`,
   'src/db/repository.ts': `export function save(row) {\n  db.query('INSERT INTO ledger (id, amount) VALUES (?, ?)', row);\n}\n`,
 };
 
@@ -39,7 +43,7 @@ tests:
   - name: primary datastore image is postgres
     kind: file_match
     target: infra/docker-compose.yml
-    pattern: "image:\\\\s*postgres:"
+    pattern: 'image: postgres:'
     on_fail: The datastore image changed. If intentional, update this record.
 evidence:
   links:
@@ -59,7 +63,7 @@ tests:
   - name: session driver is redis
     kind: file_match
     target: config/session.yml
-    pattern: "driver:\\\\s*redis"
+    pattern: 'driver: redis'
 `;
 
 const D0023 = `
@@ -76,7 +80,7 @@ tests:
   - name: repository writes raw SQL
     kind: file_match
     target: src/db/repository.ts
-    pattern: "INSERT INTO"
+    pattern: 'INSERT INTO'
 `;
 
 const D0031 = `
@@ -91,7 +95,7 @@ tests:
   - name: monitoring config declares pg_stat_statements
     kind: file_match
     target: infra/monitoring/datastore.yaml
-    pattern: "pg_stat_statements"
+    pattern: 'pg_stat_statements'
     on_fail: Nobody added the monitoring config. This decision is not being followed.
 `;
 
@@ -104,12 +108,27 @@ domain: [datastore, messaging]
 constraints: ["#no-downtime"]
 rationale: Downstream consumers need the event stream, not the table.
 tests:
-  - name: confirmed with the platform team
-    kind: manual
-    note: Ownership sits with the platform team; no automated check exists yet.
+  - name: ledger topic is declared
+    kind: file_match
+    target: infra/kafka/topics.yaml
+    pattern: 'ledger.events'
 `;
 
-export const SEED_DOCUMENTS = [D0012, D0018, D0023, D0031, D0044];
+const D0055 = `
+id: 0055-feature-flags-for-rewrite
+decision: Gate the checkout rewrite behind a feature flag
+decided_at: 2026-09-08T13:20:00Z
+decided_by: [dan@example.com]
+domain: [release, risk]
+constraints: ["#no-downtime"]
+rationale: The rewrite touches the payment path; a flag lets us dark-launch it.
+tests:
+  - name: flag reviewed with release engineering
+    kind: manual
+    note: A human signs off each rollout; there is no machine-checkable assertion yet.
+`;
+
+export const SEED_DOCUMENTS = [D0012, D0018, D0023, D0031, D0044, D0055];
 
 export function loadSeedDecisions(): Decision[] {
   return SEED_DOCUMENTS.map(parseDecision);
