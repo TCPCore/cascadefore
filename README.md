@@ -144,3 +144,20 @@ The ones that matter:
 2. **Live graph validation.** No call has been made against a real Teamwork Graph. Relationship names in `queries.ts` are written from docs and must be checked in [TWG Labs](https://teamwork-graph.atlassian.com/query-builder).
 3. **Query registration** has no CLI entry point in Forge 15; it needs a webtrigger or admin page.
 4. **Dossier writer** and **Bitbucket trigger** are designed but unbuilt.
+
+---
+
+## Licence
+
+Apache License 2.0 — see [LICENSE](LICENSE).
+
+Copyright 2026 the Cascade authors.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this project except in compliance with the License. You may obtain a copy of the
+License at <http://www.apache.org/licenses/LICENSE-2.0>.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.

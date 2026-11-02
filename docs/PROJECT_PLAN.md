@@ -98,8 +98,9 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-031 | Laplace confidence + ratio-guarded pattern extraction | [x] | 1d | DAC-030 |
 | DAC-032 | `growthCurve` over decision-ordered prefixes | [x] | 0.5d | DAC-031 |
 | DAC-033 | Retrieval/pattern unit tests (curve shape, guards) | [x] | 0.5d | DAC-031 |
-| DAC-034 | Forge SQL schema for `decisions`, `outcomes`, `patterns` | [ ] | 1d | DAC-040 |
-| DAC-035 | Case-base repository (insert/query) + migration runner | [ ] | 1d | DAC-034 |
+| DAC-034 | Forge SQL schema for `decisions`, `outcomes`, `patterns` (portable DDL) | [x] | 1d | DAC-040 |
+| DAC-035 | Case-base repository (insert/query) + schema bootstrap | [x] | 1d | DAC-034 |
+| DAC-067 | Adopt `migrationRunner.run()` from `@forge/sql` instead of hand-rolled `ensureSchema` | [ ] | 0.5d | DAC-034 |
 | DAC-036 | Ingest: Confluence mirror → case base on demand | [ ] | 1d | DAC-028, DAC-035 |
 | DAC-037 | Case-base UI: list, status, growth curve, "similar to this" | [x] | 1.5d | DAC-033 |
 
