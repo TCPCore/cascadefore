@@ -14,6 +14,7 @@ import { scoreBranches } from '../domain/scoring';
 import { buildPaths, decide, rankPaths } from '../domain/graft';
 import { buildSnapshot } from '../storage/runs';
 import { describeConsequence, projectBranch } from '../domain/projection';
+import { makeEvent, specFor, type EventContext, type EventKind } from '../domain/events';
 
 export interface GraphCollection {
   artifacts: RawArtifact[];
@@ -28,6 +29,9 @@ export interface GraphSource {
 
 export interface PipelineInput {
   runId: string;
+  /** What the graph is anchored around. Defaults to a build failure. */
+  eventKind?: EventKind;
+  event?: EventContext;
   workItemKey: string;
   intentText?: string;
   horizon?: Horizon;
@@ -60,6 +64,7 @@ function pairScores(branches: readonly Branch[], scores: readonly BranchScore[])
 
 function emptySnapshot(
   input: PipelineInput,
+  event: EventContext,
   intent: Intent,
   collection: GraphCollection,
   status: RunSnapshotDto['status'],
@@ -68,6 +73,7 @@ function emptySnapshot(
 ): RunSnapshotDto {
   return buildSnapshot({
     runId: input.runId,
+    event,
     workItemKey: input.workItemKey,
     workItemAri: `ari:cloud:jira::issue/${input.workItemKey}`,
     failureAt: input.failureAt,
@@ -102,6 +108,14 @@ function emptySnapshot(
  * honest.
  */
 export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Promise<PipelineResult> {
+  const event =
+    input.event ??
+    makeEvent({
+      kind: input.eventKind,
+      subjectKey: input.workItemKey,
+      at: input.failureAt,
+      title: `${specFor(input.eventKind ?? 'build-failure').label} ${input.workItemKey}`,
+    });
   const intent = await deps.parseIntent(input.intentText ?? '', input.horizon);
 
   await deps.onStage?.('traversing');
@@ -109,7 +123,7 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
   if (collection.errorCode) {
     return {
-      snapshot: emptySnapshot(input, intent, collection, 'failed', collection.errorCode, 0),
+      snapshot: emptySnapshot(input, event, intent, collection, 'failed', collection.errorCode, 0),
       nodes: [],
     };
   }
@@ -119,7 +133,7 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
   if (assembly.nodes.length === 0) {
     return {
-      snapshot: emptySnapshot(input, intent, collection, 'empty', null, 0),
+      snapshot: emptySnapshot(input, event, intent, collection, 'empty', null, 0),
       nodes: [],
     };
   }
@@ -151,6 +165,7 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
   const snapshot = buildSnapshot({
     runId: input.runId,
+    event,
     workItemKey: input.workItemKey,
     workItemAri: `ari:cloud:jira::issue/${input.workItemKey}`,
     failureAt: input.failureAt,

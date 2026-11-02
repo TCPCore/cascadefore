@@ -16,6 +16,7 @@ import type {
   TreeNodeDto,
 } from '../shared/dtos';
 import type { Projection } from '../domain/projection';
+import type { EventContext } from '../domain/events';
 import type { SqlDriver } from './driver';
 import { ensureSchema } from './schema';
 
@@ -57,6 +58,7 @@ function parseJson<T>(value: unknown, fallback: T): T {
 
 export interface SnapshotInput {
   runId: string;
+  event: EventContext;
   workItemKey: string;
   workItemAri: string;
   failureAt: string;
@@ -114,6 +116,7 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
 
   return {
     runId: input.runId,
+    event: input.event,
     workItemKey: input.workItemKey,
     failureAt: input.failureAt,
     status: input.status,
@@ -148,9 +151,9 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
 
   statements.push({
     text: `INSERT INTO cascade_runs
-      (run_id, work_item_key, work_item_ari, failure_at, status, stage, intent_json, intent_source,
+      (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, intent_json, intent_source,
        spine_json, recommendation_json, stats_json, scope_probe_json, dossier_url, error_code, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE status = VALUES(status), stage = VALUES(stage),
         recommendation_json = VALUES(recommendation_json), dossier_url = VALUES(dossier_url),
         error_code = VALUES(error_code)`,
@@ -161,6 +164,7 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
       toSqlDateTime(snapshot.failureAt),
       snapshot.status,
       snapshot.stage,
+      JSON.stringify(snapshot.event),
       JSON.stringify(snapshot.intent),
       snapshot.intent.source,
       JSON.stringify(snapshot.spine),
@@ -258,6 +262,7 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
 export interface RunRow {
   run_id: string;
   work_item_key: string;
+  event_json?: unknown;
   failure_at: unknown;
   status: string;
   stage: string;
@@ -379,6 +384,13 @@ export function hydrate(
 
   return {
     runId: run.run_id,
+    event: parseJson<EventContext>(run.event_json, {
+      kind: 'build-failure',
+      subjectKey: run.work_item_key,
+      subjectAri: `ari:cloud:jira::issue/${run.work_item_key}`,
+      title: `Build failure ${run.work_item_key}`,
+      at: fromSqlDateTime(run.failure_at),
+    }),
     workItemKey: run.work_item_key,
     failureAt: fromSqlDateTime(run.failure_at),
     status: run.status as RunSnapshotDto['status'],

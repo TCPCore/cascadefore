@@ -20,6 +20,7 @@ import { createDemoSource } from '../src/demo/seedSource';
 import { parseIntentLocally } from '../src/domain/intent';
 import type { RunSnapshotDto } from '../src/shared/dtos';
 import type { Horizon } from '../src/shared/types';
+import { isEventKind, type EventKind } from '../src/domain/events';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const WEB_ROOT = join(ROOT, 'static', 'panel', 'build-web');
@@ -86,6 +87,7 @@ async function handleRun(req: IncomingMessage, res: ServerResponse): Promise<voi
   const body = await readBody(req);
   const workItemKey = typeof body.workItemKey === 'string' && body.workItemKey ? body.workItemKey : DEMO_WORK_ITEM;
   const intentText = typeof body.intentText === 'string' ? body.intentText : '';
+  const eventKind: EventKind | undefined = isEventKind(body.eventKind) ? body.eventKind : undefined;
   const horizon: Horizon =
     body.horizon === 'quarters' || body.horizon === 'years' || body.horizon === 'weeks' ? body.horizon : 'weeks';
 
@@ -94,7 +96,7 @@ async function handleRun(req: IncomingMessage, res: ServerResponse): Promise<voi
 
   try {
     const result = await runPipeline(
-      { runId, workItemKey, intentText, horizon, failureAt: createdAt, createdAt },
+      { runId, workItemKey, eventKind, intentText, horizon, failureAt: createdAt, createdAt },
       {
         source: createDemoSource(),
         parseIntent: async (text, h) => parseIntentLocally(text, h),

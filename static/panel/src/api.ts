@@ -65,6 +65,7 @@ export async function startCascade(input: {
   workItemKey: string;
   intentText: string;
   horizon: Horizon;
+  eventKind?: string;
 }): Promise<StartResult> {
   if (standalone) {
     try {

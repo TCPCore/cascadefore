@@ -9,6 +9,7 @@ export const DDL: string[] = [
     failure_at DATETIME NOT NULL,
     status VARCHAR(24) NOT NULL,
     stage VARCHAR(24) NOT NULL,
+    event_json JSON,
     intent_json JSON,
     intent_source VARCHAR(24),
     spine_json JSON,
@@ -66,6 +67,15 @@ export const DDL: string[] = [
 ];
 
 /**
+ * Additive migrations for tables that already exist. Each is attempted
+ * independently and ignored if the column is already there, because
+ * `CREATE TABLE IF NOT EXISTS` will never alter an existing table.
+ */
+export const COLUMN_MIGRATIONS: string[] = [
+  `ALTER TABLE cascade_runs ADD COLUMN event_json JSON`,
+];
+
+/**
  * DDL is not transactional and `CREATE TABLE IF NOT EXISTS` is idempotent, so
  * this is safe to call on every cold start. It is guarded by a module-level
  * promise to avoid five round-trips per invocation.
@@ -77,6 +87,13 @@ export async function ensureSchema(driver: SqlDriver): Promise<void> {
     schemaReady = (async () => {
       for (const statement of DDL) {
         await driver.ddl(statement);
+      }
+      for (const migration of COLUMN_MIGRATIONS) {
+        try {
+          await driver.ddl(migration);
+        } catch {
+          // Column already exists — expected on every run after the first.
+        }
       }
     })().catch((error: unknown) => {
       schemaReady = null;

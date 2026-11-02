@@ -13,11 +13,22 @@ type Tab = 'tree' | 'thennow' | 'graft';
 
 const DEFAULT_GOAL = 'Restore the build this week without adding a new dependency #no-new-dependency';
 
+/** Mirrors src/domain/events.ts — the host decides which kinds it can anchor. */
+const EVENT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'build-failure', label: 'Build failure' },
+  { value: 'incident', label: 'Incident' },
+  { value: 'deployment', label: 'Deployment' },
+  { value: 'task', label: 'Task / work item' },
+  { value: 'milestone', label: 'Milestone / release' },
+  { value: 'service-change', label: 'Service change' },
+];
+
 export function App(): JSX.Element {
   const [issueKey, setIssueKey] = useState('');
   const [healthState, setHealthState] = useState<Health | null>(null);
   const [intentText, setIntentText] = useState(DEFAULT_GOAL);
   const [horizon, setHorizon] = useState<Horizon>('weeks');
+  const [eventKind, setEventKind] = useState('build-failure');
   const [phase, setPhase] = useState<Phase>('idle');
   const [snapshot, setSnapshot] = useState<RunSnapshotDto | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +64,7 @@ export function App(): JSX.Element {
     setElapsed(0);
 
     try {
-      const started = await startCascade({ workItemKey: issueKey, intentText, horizon });
+      const started = await startCascade({ workItemKey: issueKey, intentText, horizon, eventKind });
       if (started.error || !started.runId) {
         setError(started.message ?? started.error ?? 'Cascade could not start.');
         setPhase('error');
@@ -79,7 +90,7 @@ export function App(): JSX.Element {
       setError(cause instanceof Error ? cause.message : 'Unexpected error while running Cascade.');
       setPhase('error');
     }
-  }, [horizon, intentText, issueKey]);
+  }, [horizon, intentText, issueKey, eventKind]);
 
   return (
     <div className="panel">
@@ -113,6 +124,17 @@ export function App(): JSX.Element {
         </label>
 
         <div className="row">
+          <label className="field field--inline">
+            <span>Event</span>
+            <select value={eventKind} onChange={(event) => setEventKind(event.target.value)}>
+              {EVENT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="field field--inline">
             <span>Horizon</span>
             <select value={horizon} onChange={(event) => setHorizon(event.target.value as Horizon)}>
@@ -191,8 +213,9 @@ export function App(): JSX.Element {
 
           <footer className="foot">
             <span className="muted">
-              Intent: <em>{snapshot.intent.goal}</em> · horizon {snapshot.intent.horizon} · source{' '}
-              {snapshot.intent.source}
+              Graph around: <strong>{snapshot.event.title}</strong> · {snapshot.event.kind} ·{' '}
+              {snapshot.event.at.slice(0, 10)} — intent: <em>{snapshot.intent.goal}</em> · horizon{' '}
+              {snapshot.intent.horizon}
             </span>
             {snapshot.dossierUrl && (
               <a href={snapshot.dossierUrl} target="_blank" rel="noreferrer">

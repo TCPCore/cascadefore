@@ -1,4 +1,5 @@
 import type { Projection } from '../domain/projection';
+import type { EventContext } from '../domain/events';
 import type {
   Branch,
   BranchScore,
@@ -56,6 +57,8 @@ export type RunStage = 'queued' | 'traversing' | 'extracting' | 'scoring' | 'ran
 
 export interface RunSnapshotDto {
   runId: string;
+  /** What this graph is anchored around: build failure, incident, task, … */
+  event: EventContext;
   workItemKey: string;
   failureAt: string;
   status: 'queued' | 'running' | 'loaded' | 'empty' | 'failed';
