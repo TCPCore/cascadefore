@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
+import { createLiveGraphSource } from '../src/demo/liveGraph';
 import { createGraphSource } from '../src/graph/source';
 import { createRecordedCaller, SANDBOX_ATTRIBUTION_PAGES, SANDBOX_PAGES } from '../src/graph/sandbox';
 import { runPersistedQuery } from '../src/graph/client';
@@ -43,9 +44,16 @@ const DEMO_WORK_ITEM = process.env.CASCADE_WORK_ITEM ?? 'CX-11';
  *                         transport: paging, retries, scope probe and row
  *                         mapping all execute exactly as in production
  */
-const SOURCE = process.env.CASCADE_SOURCE === 'recorded' ? 'recorded' : 'artifacts';
+const SOURCE =
+  process.env.CASCADE_SOURCE === 'recorded'
+    ? 'recorded'
+    : process.env.CASCADE_SOURCE === 'live'
+      ? 'live'
+      : 'artifacts';
 
 function buildSource() {
+  // `live` replays real Teamwork Graph payloads recorded from the site.
+  if (SOURCE === 'live') return createLiveGraphSource();
   if (SOURCE === 'recorded') {
     return createGraphSource(
       createRecordedCaller(SANDBOX_PAGES),

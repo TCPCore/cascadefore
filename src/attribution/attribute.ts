@@ -10,6 +10,12 @@ import type { RawRow } from '../graph/client';
  *
  * That is the whole trick — no shared database, no cross-app call, no connector.
  * The join key rides inside a name that both sides already agree on.
+ *
+ * Retained for the verified traversal that will replace the SQL mirror. Today no
+ * traversal feeds it: the Jira→build edge fails to plan against the live schema
+ * (see docs/GRAPH-BOUNDARY.md), so outcomes are attributed through the mirror and
+ * the Forge SQL ledger instead. The mapper is kept because the join key is
+ * stable and the traversal is the thing that will change, not this code.
  */
 
 export const DECISION_STATUS_PREFIX = 'decision/';

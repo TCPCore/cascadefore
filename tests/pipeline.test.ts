@@ -120,3 +120,30 @@ describe('pipeline end to end (seeded graph)', () => {
     expect(snapshot.dossierUrl).toBeNull();
   });
 });
+
+describe('pipeline against recorded live graph data', () => {
+  it('reconstructs decisions from real Confluence comments', async () => {
+    const { createLiveGraphSource, LIVE_ARTIFACTS } = await import('../src/demo/liveGraph');
+    const { snapshot } = await runPipeline(input('restore the build this week', 'weeks'), {
+      source: createLiveGraphSource(),
+      parseIntent: async (text, horizon) => parseIntentLocally(text, horizon),
+      now: () => NOW,
+    });
+
+    expect(snapshot.status).toBe('loaded');
+    expect(snapshot.nodes.length).toBe(3);
+    expect(snapshot.branches.length).toBeGreaterThanOrEqual(3);
+
+    // Real ARIs, so anything the UI links resolves on the site.
+    for (const node of snapshot.nodes) {
+      expect(node.ari).toMatch(/^ari:cloud:confluence:e264c23b/);
+    }
+
+    // Labels carry the comment text, not the shared "Re: <page>" subject.
+    const labels = snapshot.nodes.map((n) => n.title);
+    expect(new Set(labels).size).toBe(3);
+    expect(labels.some((l) => /Finance/i.test(l))).toBe(true);
+
+    expect(LIVE_ARTIFACTS.length).toBe(5);
+  });
+});

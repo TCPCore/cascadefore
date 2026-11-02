@@ -193,6 +193,10 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 ## 9. Current snapshot (2 Nov)
 
 **Done:** E0, E1, E2 core (registry/lifecycle/file_match fixture), E3 core (retrieval/patterns/growth), standalone host + decision UI foundation.
+**Graph boundary (2 Nov):** six queries executed against the live graph. Confirmed: `JiraIssue` label, `{ari:}` filtering, `jira_space_has_jira_work_item`, `ConfluencePage`, `document_has_comments` with comment bodies. Rejected: Jira→comment, Jira→build, page→issue edges all fail to plan — and an unknown relationship type **errors**, so they are excluded from the catalog entirely. Full record: [GRAPH-BOUNDARY.md](GRAPH-BOUNDARY.md).
+
+**Demo now runs on real data:** `CASCADE_SOURCE=live` replays recorded payloads (CX-11, page 2129941, its three genuine comments), producing three decisions with real ARIs.
+
 **Proven 2 Nov (MCP round trip):** `health` → `reconstruct-decision` → `get-run` all work over MCP. `get-run` reads the run back from Forge SQL on a *later* invocation, so the loop is MCP → action → pipeline → SQL write → SQL read → MCP response. Found and fixed a third invocation-only bug: the run upsert updated only five columns, so `stats_json` kept its first-write default `{}`.
 
 **MCP surface decided:** three real tools (`reconstruct-decision`, `get-run`, `health`). Diagnostics removed — `probe-graph` deleted (its question is answered), `bootstrap-queries` demoted to an action because registration needs a UI user session.
