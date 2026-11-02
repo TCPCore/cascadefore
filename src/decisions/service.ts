@@ -52,11 +52,20 @@ export function toRow(decision: Decision): DecisionRow {
   };
 }
 
-export async function buildDecisionReport(
+export interface CaseBase {
+  models: Decision[];
+  report: DecisionReport;
+}
+
+/**
+ * Runs the corpus and derives everything from one pass. Returning the models
+ * alongside the report lets the caller persist the ledger without re-running.
+ */
+export async function computeCaseBase(
   source: readonly Decision[] = loadSeedDecisions(),
   executors = createFixtureExecutors(),
-): Promise<DecisionReport> {
-  const decisions = await runAll(source, executors);
+): Promise<CaseBase> {
+  const models = await runAll(source, executors);
 
   const counts: Record<DecisionStatus, number> = {
     enforced: 0,
@@ -64,22 +73,32 @@ export async function buildDecisionReport(
     orphaned: 0,
     unknown: 0,
   };
-  for (const decision of decisions) counts[decision.status] += 1;
+  for (const decision of models) counts[decision.status] += 1;
 
   const testable = counts.enforced + counts.violated;
 
-  return {
-    decisions: decisions.map(toRow),
-    patterns: extractPatterns(decisions),
-    growth: growthCurve(decisions),
+  const report: DecisionReport = {
+    decisions: models.map(toRow),
+    patterns: extractPatterns(models),
+    growth: growthCurve(models),
     counts,
     testability: {
-      rate: Math.round(testabilityRate(decisions) * 1000) / 1000,
+      rate: Math.round(testabilityRate(models) * 1000) / 1000,
       testable,
-      total: decisions.length,
+      total: models.length,
     },
     generatedAt: new Date().toISOString(),
   };
+
+  return { models, report };
+}
+
+export async function buildDecisionReport(
+  source: readonly Decision[] = loadSeedDecisions(),
+  executors = createFixtureExecutors(),
+): Promise<DecisionReport> {
+  const { report } = await computeCaseBase(source, executors);
+  return report;
 }
 
 export interface SimilarForDecision {
@@ -93,8 +112,12 @@ export interface SimilarForDecision {
   }>;
 }
 
-export async function findSimilarFor(id: string): Promise<SimilarForDecision> {
-  const ran = await runAll(loadSeedDecisions(), createFixtureExecutors());
+export async function findSimilarFor(
+  id: string,
+  source: readonly Decision[] = loadSeedDecisions(),
+  executors = createFixtureExecutors(),
+): Promise<SimilarForDecision> {
+  const ran = await runAll(source, executors);
   const target = ran.find((d) => d.id === id);
   if (!target) return { id, similar: [] };
 

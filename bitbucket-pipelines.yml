@@ -1,0 +1,39 @@
+# Decision as Code — CI runner.
+#
+# Runs every .decisions/*.decision test and publishes one Bitbucket commit
+# status per decision (decision/<id>). Those statuses are what surface in Jira
+# and what Teamwork Graph syncs as build objects, so the case base learns about
+# outcomes without any app needing repository access.
+#
+# No Forge app is involved in this step. No credentials beyond the pipeline's
+# own are required, because the runner writes the payloads and curl posts them.
+
+image: node:22
+
+pipelines:
+  default:
+    - step:
+        name: decision assertions
+        caches:
+          - node
+        script:
+          - npm ci
+          - npm run build --if-present
+          # Run every decision test. --emit-statuses writes the payloads so the
+          # next lines can publish them without the runner holding a token.
+          - npx tsx scripts/run-decisions.ts --dir .decisions --root . --emit-statuses statuses.json --repo-url "$BITBUCKET_GIT_HTTP_ORIGIN/blob/$BITBUCKET_COMMIT/.decisions"
+          - |
+            for row in $(cat statuses.json | jq -r '.[] | @base64'); do
+              _jq() { echo "${row}" | base64 --decode | jq -r "${1}"; }
+              curl -s -X POST \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer ${BITBUCKET_ACCESS_TOKEN}" \
+                "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_FULL_NAME}/commit/${BITBUCKET_COMMIT}/statuses/build" \
+                -d "$(jq -n \
+                  --arg key "$(_jq '.key')" \
+                  --arg state "$(_jq '.state')" \
+                  --arg name "$(_jq '.name')" \
+                  --arg description "$(_jq '.description')" \
+                  --arg url "$(_jq '.url')" \
+                  '{key:$key, state:$state, name:$name, description:$description, url:$url}')"
+            done

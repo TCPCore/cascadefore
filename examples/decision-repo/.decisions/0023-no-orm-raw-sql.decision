@@ -1,0 +1,14 @@
+id: 0023-no-orm-raw-sql
+decision: No ORM; explicit SQL in the repository layer
+decided_at: 2026-05-19T14:00:00Z
+decided_by: [alice@example.com]
+domain: [datastore, persistence]
+constraints: ["#no-downtime"]
+rationale: |
+  Query plans matter for the ledger. An ORM hides the plan and the team has
+  been burned by N+1s before.
+tests:
+  - name: repository writes raw SQL
+    kind: file_match
+    target: src/db/repository.ts
+    pattern: 'INSERT INTO'

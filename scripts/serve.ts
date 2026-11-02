@@ -19,11 +19,11 @@ import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
 import { createGraphSource } from '../src/graph/source';
 import { createRecordedCaller, SANDBOX_PAGES } from '../src/graph/sandbox';
-import { buildDecisionReport, findSimilarFor } from '../src/decisions/service';
+import { computeCaseBase, findSimilarFor } from '../src/decisions/service';
 import { DecisionStore } from '../src/decisions/store';
 import { createSqliteDriver } from '../src/storage/sqliteDriver';
-import { createFixtureExecutors, loadSeedDecisions } from '../src/decisions/seed';
-import { runAll } from '../src/decisions/runner';
+import { loadDecisionDirectory } from '../src/runner/load';
+import { createHostExecutors } from '../src/runner/executors';
 import { parseIntentLocally } from '../src/domain/intent';
 import type { RunSnapshotDto } from '../src/shared/dtos';
 import type { Horizon } from '../src/shared/types';
@@ -60,11 +60,18 @@ const runs = new Map<string, RunSnapshotDto>();
  * Persistence switch. `memory` (default) keeps everything in the request scope;
  * `sqlite` writes the ledger through the same SQL that TiDB will run.
  */
+/**
+ * Decisions are read from the repository, not from a fixture: the case base is
+ * derived from `.decisions/*.decision` files plus the code they assert on.
+ */
+const DECISIONS_DIR = process.env.CASCADE_DECISIONS ?? 'examples/decision-repo/.decisions';
+const DECISIONS_ROOT = process.env.CASCADE_DECISIONS_ROOT ?? 'examples/decision-repo';
+
 const STORE = process.env.CASCADE_STORE === 'sqlite' ? 'sqlite' : 'memory';
 const store = STORE === 'sqlite' ? new DecisionStore(createSqliteDriver(process.env.CASCADE_DB ?? ':memory:')) : null;
 
 /** The case base is deterministic, so it is computed once and served from memory. */
-let caseBase: Awaited<ReturnType<typeof buildDecisionReport>> | null = null;
+let caseBase: Awaited<ReturnType<typeof computeCaseBase>>['report'] | null = null;
 let persistInfo: { enabled: boolean; decisions: number; patterns: number; runs: number } = {
   enabled: false,
   decisions: 0,
@@ -72,15 +79,28 @@ let persistInfo: { enabled: boolean; decisions: number; patterns: number; runs: 
   runs: 0,
 };
 
+let caseModels: Awaited<ReturnType<typeof computeCaseBase>>['models'] = [];
+
+async function loadCorpus() {
+  const loaded = await loadDecisionDirectory(DECISIONS_DIR);
+  return {
+    decisions: loaded.decisions,
+    errors: loaded.errors,
+    executors: createHostExecutors({ root: DECISIONS_ROOT }),
+  };
+}
+
 async function getCaseBase() {
   if (caseBase) return caseBase;
 
-  caseBase = await buildDecisionReport();
+  const corpus = await loadCorpus();
+  const computed = await computeCaseBase(corpus.decisions, corpus.executors);
+  caseBase = computed.report;
+  caseModels = computed.models;
 
   if (store) {
     await store.ensureSchema();
-    const ran = await runAll(loadSeedDecisions(), createFixtureExecutors());
-    await store.saveDecisions(ran);
+    await store.saveDecisions(caseModels);
     await store.savePatterns(caseBase.patterns);
     await store.recordRun(caseBase);
     const snapshot = await store.snapshot();
@@ -213,11 +233,13 @@ const server = createServer((req, res) => {
 
   if (url.startsWith('/api/decisions/similar')) {
     const id = new URL(url, 'http://localhost').searchParams.get('id') ?? '';
-    void findSimilarFor(id).then(
-      (result) => sendJson(res, 200, result),
-      (error: unknown) =>
-        sendJson(res, 500, { error: 'SIMILAR_FAILED', message: error instanceof Error ? error.message : String(error) }),
-    );
+    void loadCorpus()
+      .then((corpus) => findSimilarFor(id, corpus.decisions, corpus.executors))
+      .then(
+        (result) => sendJson(res, 200, result),
+        (error: unknown) =>
+          sendJson(res, 500, { error: 'SIMILAR_FAILED', message: error instanceof Error ? error.message : String(error) }),
+      );
     return;
   }
 
@@ -251,4 +273,5 @@ server.listen(PORT, () => {
   console.log(`  demo work item: ${DEMO_WORK_ITEM}`);
   console.log(`  source: ${SOURCE}  (set CASCADE_SOURCE=recorded for the graph sandbox)`);
   console.log(`  store: ${STORE}  (set CASCADE_STORE=sqlite to persist the ledger)`);
+  console.log(`  decisions: ${DECISIONS_DIR}  (root ${DECISIONS_ROOT})`);
 });

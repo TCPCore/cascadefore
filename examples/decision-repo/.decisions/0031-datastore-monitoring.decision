@@ -1,0 +1,13 @@
+id: 0031-datastore-monitoring
+decision: Every datastore must ship with pg_stat_statements monitoring
+decided_at: 2026-06-30T11:00:00Z
+decided_by: [bob@example.com]
+domain: [datastore, observability]
+constraints: ["#no-downtime"]
+rationale: We cannot reason about slow queries we cannot see.
+tests:
+  - name: monitoring config declares pg_stat_statements
+    kind: file_match
+    target: infra/monitoring/datastore.yaml
+    pattern: 'pg_stat_statements'
+    on_fail: Nobody added the monitoring config. This decision is not being followed.

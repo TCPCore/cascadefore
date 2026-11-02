@@ -1,0 +1,11 @@
+id: 0055-feature-flags-for-rewrite
+decision: Gate the checkout rewrite behind a feature flag
+decided_at: 2026-09-08T13:20:00Z
+decided_by: [dan@example.com]
+domain: [release, risk]
+constraints: ["#no-downtime"]
+rationale: The rewrite touches the payment path; a flag lets us dark-launch it.
+tests:
+  - name: flag reviewed with release engineering
+    kind: manual
+    note: A human signs off each rollout; there is no machine-checkable assertion yet.

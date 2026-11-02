@@ -1,0 +1,12 @@
+id: 0018-redis-for-sessions
+decision: Use Redis for session storage
+decided_at: 2026-04-02T09:30:00Z
+decided_by: [carol@example.com]
+domain: [datastore, cache]
+constraints: ["#no-downtime"]
+rationale: Sessions need sub-millisecond reads and a TTL. Redis is already operated.
+tests:
+  - name: session driver is redis
+    kind: file_match
+    target: config/session.yml
+    pattern: 'driver: redis'

@@ -80,13 +80,13 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-020 | Executor registry + `statusOf` lifecycle (enforced/violated/orphaned) | [x] | 1d | DAC-010 |
 | DAC-021 | `runDecision`/`runAll` with `skipped` semantics for missing executors | [x] | 1d | DAC-020 |
 | DAC-022 | `file_match` executor (fixture) | [x] | 0.5d | DAC-020 |
-| DAC-023 | `graph` executor against Teamwork Graph (`customQuery`) | [ ] | 1d | DAC-040 |
-| DAC-024 | `http` executor | [ ] | 0.5d | DAC-020 |
-| DAC-025 | **decisions-runner** CLI (`scripts/runner/`): glob `.decisions/`, run, report | [ ] | 1.5d | DAC-021 |
-| DAC-026 | Emit Bitbucket commit status `decision/<id>` from the runner | [ ] | 0.5d | DAC-025 |
-| DAC-027 | `bitbucket-pipelines.yml` step wiring the runner | [ ] | 0.5d | DAC-026 |
+| DAC-023 | `graph` executor against Teamwork Graph (`customQuery`) | [x] | 1d | DAC-040 |
+| DAC-024 | `http` executor | [x] | 0.5d | DAC-020 |
+| DAC-025 | **decisions-runner** CLI (`scripts/run-decisions.ts`): glob `.decisions/`, run, report | [x] | 1.5d | DAC-021 |
+| DAC-026 | Emit Bitbucket commit status `decision/<id>` from the runner | [x] | 0.5d | DAC-025 |
+| DAC-027 | `bitbucket-pipelines.yml` step wiring the runner | [x] | 0.5d | DAC-026 |
 | DAC-028 | Confluence mirror: runner posts decision + status to a Confluence space | [ ] | 1d | DAC-025 |
-| DAC-029 | Runner unit + e2e tests against a fixture repo | [ ] | 1d | DAC-025 |
+| DAC-029 | Runner unit + e2e tests against a fixture repo | [x] | 1d | DAC-025 |
 
 **Gate E2:** push to a fixture repo → commit statuses appear → Confluence shows the decision record. (Screenshot.)
 
@@ -196,4 +196,5 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 **Unblocked 2 Nov (scopes):** all 15 Teamwork Graph scopes + `write:jira-work` + `write:confluence-content` are granted on the site (admin → Connected apps → Authorization). Two consequences: the graph is testable *today*, and Teamwork Graph **connectors are unavailable on this site** ("No connectors available"), so the case base must live in Forge SQL + Confluence — which is already the design.
 
 **Unblocked 2 Nov (UI):** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
-**Next in queue:** DAC-025 (runner CLI) → DAC-026 (commit statuses) → DAC-028 (Confluence mirror) → DAC-034 (case-base SQL).
+**Done since:** runner CLI + commit statuses + pipeline config (DAC-023…027, 029), portable case-base SQL + ledger store (DAC-034/035), case-base UI (DAC-037).
+**Next in queue:** DAC-028 (Confluence mirror) → DAC-036 (ingest mirror) → DAC-041 (attribution Cypher) → DAC-057 (dashboard gadget).

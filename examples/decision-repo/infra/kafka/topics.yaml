@@ -1,0 +1,3 @@
+topics:
+  - name: ledger.events
+    partitions: 12

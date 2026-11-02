@@ -1,0 +1,12 @@
+id: 0044-kafka-for-events
+decision: Publish ledger events to Kafka
+decided_at: 2026-08-11T16:45:00Z
+decided_by: [dan@example.com]
+domain: [datastore, messaging]
+constraints: ["#no-downtime"]
+rationale: Downstream consumers need the event stream, not the table.
+tests:
+  - name: ledger topic is declared
+    kind: file_match
+    target: infra/kafka/topics.yaml
+    pattern: 'ledger.events'
