@@ -139,7 +139,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
-| DAC-060 | Seeder: one-click demo scene (ADR pages + work items + comments + builds) | [ ] | 1.5d | DAC-005 |
+| DAC-060 | Seeder: plan + idempotent executor for ADR pages, issue, comment (**REST client pending**) | [~] | 1.5d | DAC-005 |
 | DAC-061 | Video script (retrieve → pattern → grow → attribute) | [ ] | 1d | all gates |
 | DAC-062 | Record + edit 3-min video, captions, 1080p | [ ] | 2d | DAC-061 |
 | DAC-063 | Submission writeup mapping rubric to video timestamps | [ ] | 0.5d | DAC-062 |
