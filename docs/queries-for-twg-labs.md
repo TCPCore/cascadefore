@@ -7,6 +7,41 @@ before you save, so a validation error here is exactly what we need to see.
 Do them in order and stop at the first failure — each one builds on the last.
 
 
+
+---
+
+## Finding (2 Nov, from the IDE)
+
+The Cypher **label is `JiraIssue`**, not `JiraWorkItem`, and `key` / `summary`
+are not its property names:
+
+```
+Semantic Error: Field 'key' does not exist on node types '[JiraIssue]'
+Semantic Error: Field 'summary' does not exist on node types '[JiraIssue]'
+```
+
+So the API object-type names in the documentation are *not* the labels used in
+Cypher. Every query in this file was written against the API names and therefore
+needs rewriting once the real labels and properties are known.
+
+The builder also confirms `$me` is supplied automatically; any other parameter
+(`$workItemKey`, `$limit`) must be declared in the Parameters panel, which is why
+the first paste failed with the generic execution error.
+
+### Next probes
+
+**P4 — what properties does a JiraIssue actually have?**
+
+```cypher
+MATCH (item:JiraIssue) RETURN item LIMIT 1
+```
+
+**P5 — what relationships exist around an issue?**
+
+```cypher
+MATCH (n:JiraIssue)-[r]-(m) RETURN type(r) AS rel, labels(m) AS target LIMIT 25
+```
+
 ---
 
 ## Step 0 — probes (run these first, in order)
