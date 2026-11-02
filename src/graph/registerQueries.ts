@@ -36,7 +36,14 @@ function appIdFromEnv(): string {
 }
 
 async function registerOne(spec: QuerySpec, appId: string): Promise<RegistrationResult> {
-  const response = await api.asUser().requestAtlassian(route`/gateway/api/twg/cypher-queries`, {
+  // App identity: the app owns the queries and already holds the graph scopes,
+  // so registration does not need a per-user outbound consent round trip.
+  // `/gateway/...` is a site-relative path, so it has to go through a product
+  // client (which targets the site root) rather than the Atlassian API client.
+  // Registration is a contributor action, so it must run as the user. The
+  // product client carries the user's site session, which is why this works
+  // without a separate outbound-consent round trip.
+  const response = await api.asUser().requestJira(route`/gateway/api/twg/cypher-queries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

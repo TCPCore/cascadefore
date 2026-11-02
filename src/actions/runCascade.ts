@@ -1,4 +1,4 @@
-import { buildDeps, repository } from '../bootstrap';
+import { buildDeps, isDemoMode, repository } from '../bootstrap';
 import { loadConfig, assertConfigured } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
@@ -22,7 +22,10 @@ export async function runCascadeAction(event: unknown): Promise<{ summary: strin
     return { summary: 'Cascade needs a work item key, e.g. BILL-142.', runId: '' };
   }
 
-  const config = assertConfigured(loadConfig());
+  const config = loadConfig();
+  // Demo mode deliberately runs without registered graph queries; only the real
+  // graph path needs them.
+  if (!isDemoMode()) assertConfigured(config);
   const runId = newRunId();
   const createdAt = new Date().toISOString();
   const result = await runPipeline(

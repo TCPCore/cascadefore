@@ -193,6 +193,10 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 ## 9. Current snapshot (2 Nov)
 
 **Done:** E0, E1, E2 core (registry/lifecycle/file_match fixture), E3 core (retrieval/patterns/growth), standalone host + decision UI foundation.
+**Proven 2 Nov (MCP channel):** the app executes. `tools/list` returns `reconstruct-decision`, `bootstrap-queries`, `probe-graph`; `reconstruct-decision_development` completed end to end (pipeline → Forge SQL → response) with runId `run_mvzm0fgl_7fe33bcf`. `forge logs -e development` shows the invocations.
+
+**Blocked 2 Nov (graph via MCP): impossible.** The MCP gateway's `scopes_supported` lists 22 scopes and **zero `read:graph:*`**. Probed both identities against `/gateway/api/graphql/twg`: `asApp` → 401 "Unauthorized; scope does not match"; `asUser` → "Authentication Required". Teamwork Graph needs a real user session, which only exists in a UI context. Graph verification therefore depends on the panel mounting, or on registering queries manually in TWG Labs (see [queries-for-twg-labs.md](queries-for-twg-labs.md)).
+
 **Unblocked 2 Nov (scopes):** all 15 Teamwork Graph scopes + `write:jira-work` + `write:confluence-content` are granted on the site (admin → Connected apps → Authorization). Two consequences: the graph is testable *today*, and Teamwork Graph **connectors are unavailable on this site** ("No connectors available"), so the case base must live in Forge SQL + Confluence — which is already the design.
 
 **Unblocked 2 Nov (UI):** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.

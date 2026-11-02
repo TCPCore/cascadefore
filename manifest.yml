@@ -52,6 +52,8 @@ modules:
       handler: actions/runCascade.runCascadeAction
     - key: register-queries
       handler: graph/registerQueries.registerQueriesHandler
+    - key: probe-graph-fn
+      handler: actions/probeGraph.probeGraphAction
 
   consumer:
     - key: cascade-jobs
@@ -84,6 +86,26 @@ modules:
           required: false
           description: One of weeks, quarters or years
 
+    # Registration as a tool: Forge CLI 15 has no `invoke`, so a client call is
+    # how the persisted Cypher actually gets registered.
+    - key: probe-graph
+      name: Probe Teamwork Graph access
+      function: probe-graph-fn
+      actionVerb: GET
+      description: |
+        Diagnostic. Calls the Teamwork Graph endpoint as the app and as the user
+        and reports the status of each, to establish which identity can read it.
+      inputs: {}
+
+    - key: bootstrap-queries
+      name: Register Teamwork Graph queries
+      function: register-queries
+      actionVerb: GET
+      description: |
+        Register the app's persisted Cypher queries and return the keys to store
+        in the app environment.
+      inputs: {}
+
   rovo:agent:
     - key: cascade-agent
       name: Cascade
@@ -113,6 +135,8 @@ modules:
       name: Cascade
       tools:
         - reconstruct-decision
+        - bootstrap-queries
+        - probe-graph
 
   sql:
     - key: cascade-db
