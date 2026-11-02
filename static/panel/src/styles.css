@@ -1129,3 +1129,45 @@ select:focus,
 .similar__title { flex: 1; }
 .similar__score { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--blue); }
 .similar__why { flex-basis: 100%; color: var(--n200); font-size: 11px; }
+
+
+/* ---------- outcome trail ---------- */
+
+.trail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.trail li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--n10);
+}
+
+.trail__kind {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--n20);
+  color: var(--n500);
+}
+
+.trail__kind--build { background: var(--blue-soft); color: var(--blue); }
+.trail__kind--deployment { background: var(--green-soft); color: var(--green); }
+.trail__kind--pull-request { background: var(--amber-soft); color: var(--amber); }
+
+.trail__title { flex: 1; }
+.trail__state { font-weight: 700; font-size: 11px; color: var(--green); }
+.trail__state.is-bad { color: var(--red); }
+.trail__decision { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: var(--n200); }

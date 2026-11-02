@@ -60,6 +60,24 @@ export interface SimilarRow {
   because: string[];
 }
 
+export interface AttributionEventRow {
+  kind: 'build' | 'repository' | 'work-item' | 'pull-request' | 'deployment';
+  ari: string;
+  title: string;
+  state?: string;
+  decisionId?: string;
+}
+
+export interface AttributionSummary {
+  decisions: string[];
+  builds: number;
+  workItems: number;
+  pullRequests: number;
+  deployments: number;
+  failedBuilds: number;
+  events: AttributionEventRow[];
+}
+
 export interface Health {
   demoMode: boolean;
   configured: boolean;
@@ -170,6 +188,22 @@ export async function getSimilar(id: string): Promise<SimilarRow[]> {
     return result.similar;
   } catch {
     return [];
+  }
+}
+
+export async function getAttribution(): Promise<AttributionSummary | null> {
+  if (standalone) {
+    try {
+      const result = await jsonFetch<{ summary: AttributionSummary }>('/api/attribution');
+      return result.summary;
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return await bridgeInvoke<AttributionSummary>('attribution');
+  } catch {
+    return null;
   }
 }
 

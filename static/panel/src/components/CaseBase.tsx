@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
+  getAttribution,
   getDecisionReport,
   getSimilar,
+  type AttributionSummary,
   type DecisionReport,
   type DecisionRow,
   type SimilarRow,
@@ -18,9 +20,11 @@ export function CaseBase(): JSX.Element {
   const [report, setReport] = useState<DecisionReport | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [similar, setSimilar] = useState<SimilarRow[]>([]);
+  const [attribution, setAttribution] = useState<AttributionSummary | null>(null);
 
   useEffect(() => {
     void getDecisionReport().then(setReport);
+    void getAttribution().then(setAttribution);
   }, []);
 
   useEffect(() => {
@@ -127,6 +131,35 @@ export function CaseBase(): JSX.Element {
           ))}
         </ul>
       </section>
+
+      {attribution && attribution.events.length > 0 && (
+        <section className="card">
+          <header className="card__head">
+            <h2>Outcome trail</h2>
+            <span className="muted">
+              {attribution.builds} build(s) · {attribution.workItems} work item(s) ·{' '}
+              {attribution.pullRequests} PR(s) · {attribution.deployments} deployment(s)
+            </span>
+          </header>
+
+          <p className="hint">
+            Commit statuses named <code>decision/&lt;id&gt;</code> are synced by Atlassian into Teamwork
+            Graph. The join key rides inside the name, so no database is shared between the repository
+            and the app.
+          </p>
+
+          <ul className="trail">
+            {attribution.events.map((event) => (
+              <li key={`${event.kind}-${event.ari}`}>
+                <span className={`trail__kind trail__kind--${event.kind}`}>{event.kind}</span>
+                <span className="trail__title">{event.title}</span>
+                {event.state && <span className={`trail__state ${event.state === 'FAILED' ? 'is-bad' : ''}`}>{event.state}</span>}
+                {event.decisionId && <span className="trail__decision">{event.decisionId}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <header className="card__head">
