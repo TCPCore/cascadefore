@@ -1,10 +1,5 @@
 # Teamwork Graph queries — paste into TWG Labs
 
-> **Rewritten 2 Nov** against the authoritative relationship catalog
-> (`/api-reference/relationship-types/overview`). Relationship names are
-> snake_case `<source>_<verb>_<target>`; the label is `JiraIssue`; only `ari` is
-> queryable, and **there is no Confluence-page → work-item edge**.
-
 Open <https://teamwork-graph.atlassian.com/query-builder>, select the site, and
 paste each query below into the editor. The builder validates syntax and schema
 before you save, so a validation error here is exactly what we need to see.
@@ -13,30 +8,17 @@ Do them in order and stop at the first failure — each one builds on the last.
 
 ## 1. spine — cascade-spine
 
-Work item with comments, space, linked items and external builds
+Work item and its space, by ARI
 
 **Scopes it needs**
 
 - `read:graph:issue:jira`
-- `read:graph:issue-comment:jira`
 - `read:graph:project:jira`
-- `read:graph:issue-remote-link:jira`
-- `read:graph:build:external`
 
 ```cypher
-MATCH (item:JiraIssue)
-OPTIONAL MATCH (item)-[:jira_work_item_has_jira_work_item_comment]->(comment:JiraWorkItemComment)
-OPTIONAL MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item)
-OPTIONAL MATCH (item)-[:jira_work_item_links_jira_work_item]->(linked:JiraWorkItem)
-OPTIONAL MATCH (item)-[:jira_work_item_links_jira_work_item_remote_link]->(remote:JiraWorkItemRemoteLink)
-OPTIONAL MATCH (item)-[:jira_work_item_links_external_build]->(build:ExternalBuild)
-RETURN item AS workItem,
-       comment AS workItemComment,
-       space AS jiraSpace,
-       linked AS linkedWorkItem,
-       remote AS remoteLink,
-       build AS build
-LIMIT $limit
+MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item:JiraIssue {ari: $workItemAri})
+RETURN space AS jiraSpace, item AS workItem
+LIMIT 1
 ```
 
 ---
@@ -112,80 +94,40 @@ relationship or object type, which is the thing I cannot guess from the docs.
 
 ---
 
-## Confirmed edges (2 Nov)
+## Confirmed by execution (2 Nov)
 
-`jira_space_has_jira_work_item` **works** and returned `CX-11`:
+| Object / edge | Status | Shape observed |
+|---|---|---|
+| `JiraIssue` label | ✅ | node carries `key`, `summary`, `issueId`, `webUrl`, `createdAt` as **hydrated** fields |
+| `{ari: '...'}` filter | ✅ | returned `CX-11` exactly |
+| `jira_space_has_jira_work_item` | ✅ | space → issue, worked with `item:JiraIssue` as target |
+| `ConfluencePage` | ✅ | `id`, `pageId`, `title`, `createdAt`, `lastUpdatedAt`, `status`, `webUrl`, `author` |
+| `document_has_comments` | ✅ | returned 3 real comments |
+| `ConfluenceComment` | ✅ | `id`, `name`, `bodyStorageValue`, `webUrl`, `author` |
+| `jira_work_item_has_jira_work_item_comment` | ❌ errors | name or target label wrong |
+| `jira_work_item_links_external_build` | ❌ errors | name or target label wrong |
 
-```yaml
-space: JiraSpace  key=CX  name="Core Experience"
-item:  JiraWorkItem  key=CX-11  issueId=66400
-       ari:cloud:jira:e264c23b-67d7-48c5-ba33-9ef74f000ab6:issue/66400
-```
+An unknown relationship type **errors**; it does not return empty. That is why the
+spine query now uses only the proven space edge.
 
-Two consequences:
+`ConfluenceComment.bodyStorageValue` carries the real HTML body, so decision
+synthesis can read what a comment actually said — including an unanswered
+alternative.
 
-1. Teamwork Graph indexed a work item created roughly an hour earlier — sync is
-   effectively immediate, so the demo can rely on freshly created content.
-2. A bare `MATCH (item:JiraIssue) … LIMIT n` returns an **arbitrary window**, so the
-   target issue is usually absent. The spine must filter, and only `ari` can be
-   filtered on — a key alone is not enough, because the ARI needs the numeric
-   `issueId`.
+### E1/E2 variants worth one more try
 
-## Final probe — does `ari` filtering work?
-
-```cypher
-MATCH (item:JiraIssue {ari: 'ari:cloud:jira:e264c23b-67d7-48c5-ba33-9ef74f000ab6:issue/66400'})
-OPTIONAL MATCH (item)-[:jira_work_item_has_jira_work_item_comment]->(c:JiraWorkItemComment)
-OPTIONAL MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item)
-OPTIONAL MATCH (item)-[:jira_work_item_links_external_build]->(build:ExternalBuild)
-RETURN item, c, space, build LIMIT 6
-```
-
-If this returns the CX-11 node, the spine is fully validated: label, `ari` filter,
-and three edges in one query.
-
----
-
-## Round 2 — the four edges still unproven
-
-`ari` filtering is **confirmed** (returned CX-11 exactly). What is not yet proven is
-whether each edge exists *and* has data. Each query below is independent — run it,
-paste the JSON, or paste the error.
-
-**E1 — do work-item comments exist anywhere?**
+Drop the target label (the label, not the edge, may be wrong):
 
 ```cypher
-MATCH (item:JiraIssue)-[:jira_work_item_has_jira_work_item_comment]->(c:JiraWorkItemComment)
-RETURN item, c LIMIT 3
+MATCH (item:JiraIssue)-[:jira_work_item_has_jira_work_item_comment]->(c) RETURN c LIMIT 3
 ```
-
-**E2 — do external builds ever link to a work item?**
 
 ```cypher
-MATCH (item:JiraIssue)-[:jira_work_item_links_external_build]->(b:ExternalBuild)
-RETURN item, b LIMIT 3
+MATCH (item:JiraIssue)-[:jira_work_item_links_external_build]->(b) RETURN b LIMIT 3
 ```
 
-**E3 — do Confluence pages exist?**
+Swap the source label to the documented one:
 
 ```cypher
-MATCH (p:ConfluencePage) RETURN p LIMIT 2
+MATCH (item:JiraWorkItem)-[:jira_work_item_has_jira_work_item_comment]->(c) RETURN c LIMIT 3
 ```
-
-**E4 — do pages have comments?**
-
-```cypher
-MATCH (p:ConfluencePage)-[:document_has_comments]->(c:ConfluenceComment)
-RETURN p, c LIMIT 3
-```
-
-### How to read the answers
-
-| Result | Meaning |
-|---|---|
-| rows | edge exists and has data — wire it |
-| `{"edges": []}` | edge name is right, graph is empty for it — fixture stays |
-| error | edge name is wrong — the error names the correct one |
-
-An empty result is not a failure. It tells me the demo must seed that content,
-which the seeder already plans to do.

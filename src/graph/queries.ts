@@ -40,21 +40,16 @@ export interface QuerySpec {
 export const SPINE_QUERY: QuerySpec = {
   key: 'spine',
   name: 'cascade-spine',
-  description: 'Work item with comments, space, linked items and external builds',
-  objectTypes: ['JiraWorkItem', 'JiraWorkItemComment', 'JiraSpace', 'JiraWorkItemRemoteLink', 'ExternalBuild'],
-  cypher: `MATCH (item:JiraIssue)
-OPTIONAL MATCH (item)-[:jira_work_item_has_jira_work_item_comment]->(comment:JiraWorkItemComment)
-OPTIONAL MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item)
-OPTIONAL MATCH (item)-[:jira_work_item_links_jira_work_item]->(linked:JiraWorkItem)
-OPTIONAL MATCH (item)-[:jira_work_item_links_jira_work_item_remote_link]->(remote:JiraWorkItemRemoteLink)
-OPTIONAL MATCH (item)-[:jira_work_item_links_external_build]->(build:ExternalBuild)
-RETURN item AS workItem,
-       comment AS workItemComment,
-       space AS jiraSpace,
-       linked AS linkedWorkItem,
-       remote AS remoteLink,
-       build AS build
-LIMIT $limit`,
+  description: 'Work item and its space, by ARI',
+  objectTypes: ['JiraWorkItem', 'JiraSpace'],
+  // Only edges proven against the live graph are used here. `JiraIssue` is the
+  // real label, `{ari: ...}` is the only filterable property, and the space edge
+  // is confirmed. Jira-side comment and build edges are deliberately absent:
+  // both names failed to plan, and an unknown relationship type errors rather
+  // than returning empty, so including them would break the whole query.
+  cypher: `MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item:JiraIssue {ari: $workItemAri})
+RETURN space AS jiraSpace, item AS workItem
+LIMIT 1`,
 };
 
 /**
