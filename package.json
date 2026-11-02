@@ -2,7 +2,7 @@
   "name": "cascade",
   "version": "0.1.0",
   "private": true,
-  "description": "Cascade \u2014 counterfactual decision-path reconstruction for Jira, built on Forge + Teamwork Graph.",
+  "description": "Cascade — counterfactual decision-path reconstruction for Jira, built on Forge + Teamwork Graph.",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -28,6 +28,7 @@
     "@forge/events": "^3.0.9",
     "@forge/llm": "^1.0.9",
     "@forge/resolver": "^2.0.2",
-    "@forge/sql": "^4.0.9"
+    "@forge/sql": "^4.0.9",
+    "yaml": "^2.9.1"
   }
 }

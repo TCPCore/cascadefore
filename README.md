@@ -2,7 +2,9 @@
 
 Reconstructs the decision that seeded a failure, scores the paths that were evidenced at the time, and recommends the cheapest evidenced way back to the team's goal — every claim carrying an ARI.
 
-Built for **Codegeist 2026** on Forge + Teamwork Graph. Track: **Apps for Software Teams**. Entered for **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, and **Best Marketplace published app**.
+Built for **Codegeist 2026** on Forge + Teamwork Graph.
+
+> 📋 **Scope, tasks and milestones live in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — the single source of truth for what is being built and what is done. Track: **Apps for Software Teams**. Entered for **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, and **Best Marketplace published app**.
 
 > The failure wasn't a bad decision. It was an unconnected graph.
 
