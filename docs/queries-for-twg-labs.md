@@ -28,6 +28,24 @@ The builder also confirms `$me` is supplied automatically; any other parameter
 (`$workItemKey`, `$limit`) must be declared in the Parameters panel, which is why
 the first paste failed with the generic execution error.
 
+### Confirmed schema (P4, 2 Nov)
+
+```yaml
+label:      JiraIssue          # not JiraWorkItem; the node's typename is JiraWorkItem
+properties: key, summary, description, createdAt, issueId, webUrl, id (ARI)
+```
+
+`RETURN item` proves `key` and `summary` exist at runtime, while the IDE's
+semantic checker claims they do not. **The IDE checker disagrees with the engine,
+so runtime wins.** Property projection still needs confirming:
+
+```cypher
+MATCH (item:JiraIssue {key: 'LEO-47'}) RETURN item.key AS key, item.summary AS summary
+```
+
+The graph also contains the demo-seeded issues (`LEO-47` …), so there is real
+content to query — `CX-11` may not be indexed yet.
+
 ### Next probes
 
 **P4 — what properties does a JiraIssue actually have?**
