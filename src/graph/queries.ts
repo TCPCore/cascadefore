@@ -73,51 +73,21 @@ LIMIT $limit`,
 };
 
 /**
- * OUTCOMES — implementation proof for the failed work item.
+ * There is deliberately no outcomes or attribution traversal here.
  *
- * `jira_work_item_links_external_build` / `_external_commit` are documented;
- * deployments hang off repositories and services, not off issues, so they are
- * reached through the build rather than directly.
+ * Two edges were tried against the live graph and both failed to plan:
+ * `jira_work_item_links_external_build` and
+ * `jira_work_item_has_jira_work_item_comment`. An unknown relationship type
+ * errors rather than returning empty, so including either would break the whole
+ * query.
+ *
+ * The consequence is architectural, not cosmetic: the graph is the **context**
+ * layer (what the work is, which space it belongs to, which documents discuss
+ * it). Outcomes come from the two places we control — the Confluence mirror and
+ * the Forge SQL ledger. That split is stated in docs/ARCHITECTURE.md.
  */
-export const OUTCOME_QUERY: QuerySpec = {
-  key: 'outcomes',
-  name: 'cascade-outcomes',
-  description: 'External builds and commits linked to the failing work item',
-  objectTypes: ['JiraWorkItem', 'ExternalBuild', 'ExternalCommit', 'ExternalDeployment'],
-  cypher: `MATCH (item:JiraIssue)
-WHERE item.ari IN $workItemAris
-OPTIONAL MATCH (item)-[:jira_work_item_links_external_build]->(build:ExternalBuild)
-OPTIONAL MATCH (item)-[:jira_work_item_links_external_commit]->(commit:ExternalCommit)
-OPTIONAL MATCH (build)-[:external_service_links_external_build]->(service:ExternalService)
-RETURN build AS build, commit AS commit, service AS service
-LIMIT $limit`,
-};
 
-/**
- * ATTRIBUTION — the outcome ledger.
- *
- * Commit statuses published by the decisions runner are named `decision/<id>`.
- * Atlassian syncs Bitbucket builds into Teamwork Graph, so those statuses arrive
- * as graph objects for free; this walks from such a build to the work items it
- * is linked to. No shared database, no cross-app call — the join key rides in
- * the name.
- *
- * ⚠️  Verify against TWG Labs: `build.name` is assumed queryable.
- */
-export const ATTRIBUTION_QUERY: QuerySpec = {
-  key: 'attribution',
-  name: 'cascade-attribution',
-  description: 'Decision status build → linked work items and commits',
-  objectTypes: ['ExternalBuild', 'ExternalCommit', 'JiraWorkItem'],
-  cypher: `MATCH (build:ExternalBuild)
-WHERE build.name STARTS WITH $decisionPrefix
-OPTIONAL MATCH (item:JiraIssue)-[:jira_work_item_links_external_build]->(build)
-OPTIONAL MATCH (commit:ExternalCommit)<-[:external_build_has_external_commit]-(build)
-RETURN build AS build, item AS workItem, commit AS commit
-LIMIT $limit`,
-};
-
-export const QUERY_CATALOG: QuerySpec[] = [SPINE_QUERY, BRANCH_QUERY, OUTCOME_QUERY, ATTRIBUTION_QUERY];
+export const QUERY_CATALOG: QuerySpec[] = [SPINE_QUERY, BRANCH_QUERY];
 
 /**
  * Teamwork Graph scope per object type. A missing scope does not error — it

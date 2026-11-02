@@ -8,7 +8,12 @@ import type { GraphCollection, GraphSource } from '../pipeline/run';
 export interface QueryKeys {
   spine: string;
   branches: string;
-  outcomes: string;
+  /**
+   * No verified outcomes traversal exists: the Jira→build edge does not plan
+   * against this schema. Kept optional so an install can add one later without
+   * a code change; when absent, outcomes simply come from elsewhere.
+   */
+  outcomes?: string;
 }
 
 interface NodeValue {
@@ -235,9 +240,11 @@ export function createGraphSource(
         mapBranchRows(rows, fallback),
       );
 
-      const outcomes = await runPersistedQuery(caller, keys.outcomes, { componentAris: [], limit: 25 }, (rows) =>
-        mapOutcomeRows(rows, fallback),
-      );
+      const outcomes = keys.outcomes
+        ? await runPersistedQuery(caller, keys.outcomes, { limit: 25 }, (rows) =>
+            mapOutcomeRows(rows, fallback),
+          )
+        : { rows: [] as RawArtifact[], pages: 0, truncated: false, errorCode: null };
 
       const artifacts = [...spine.rows, ...branches.rows, ...outcomes.rows];
       const scopeProbe =

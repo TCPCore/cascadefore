@@ -127,6 +127,34 @@ Production is reserved for the demo recording.
 7. The mirror cannot lose a test: repo → page → repo round-trips.
 8. A malformed decision file never stops the run; it is reported alongside the good ones.
 
+## 5a. The graph boundary, as measured
+
+Six queries were run against the live graph on 2 Nov. Three findings changed the design:
+
+| Tried | Result | Consequence |
+|---|---|---|
+| `MATCH (item:JiraIssue {ari: …})` | ✅ returns the issue | ARI is the only filterable property |
+| `item.key` / `item.summary` as predicates | ❌ error | fields are **hydrated**, not queryable; filter in code |
+| `jira_space_has_jira_work_item` | ✅ space → issue | the one proven Jira edge |
+| `ConfluencePage` + `document_has_comments` | ✅ pages and comment **bodies** | the decision store is real |
+| `jira_work_item_has_jira_work_item_comment` | ❌ fails to plan | no Jira comment traversal |
+| `jira_work_item_links_external_build` | ❌ fails to plan | no Jira → build traversal |
+
+An unknown relationship type **errors**; it does not return empty. So the catalog
+contains only the two traversals that execute.
+
+**The resulting split**, which is now the architecture rather than a compromise:
+
+```
+graph  → context:  which issue, which space, which documents, what comments say
+mirror → decisions: the record, its tests, its status
+SQL    → outcomes: what was observed when the tests ran
+```
+
+The graph cannot attribute an outcome to a decision, because no path exists from
+a work item to a build. Attribution therefore lives where we control both ends:
+the runner publishes `decision/<id>`, and the mirror plus ledger hold the result.
+
 ## 6. What is not verified
 
 - No live Teamwork Graph call (scopes granted, query not yet executed).

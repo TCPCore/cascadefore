@@ -7,7 +7,6 @@ import {
 } from '../src/attribution/attribute';
 import { runPersistedQuery } from '../src/graph/client';
 import { createRecordedCaller, SANDBOX_ATTRIBUTION_PAGES, type RowSpec } from '../src/graph/sandbox';
-import { ATTRIBUTION_QUERY, scopesFor } from '../src/graph/queries';
 import type { RawRow } from '../src/graph/client';
 
 function row(spec: RowSpec): RawRow {
@@ -102,30 +101,5 @@ describe('attribution summary', () => {
     expect(summary.failedBuilds).toBe(1);
     expect(summary.deployments).toBe(1);
     expect(summary.decisions).toEqual(['0012', '0031']);
-  });
-});
-
-describe('attribution query', () => {
-  it('declares the scopes its traversal touches', () => {
-    expect(scopesFor(ATTRIBUTION_QUERY)).toContain('read:graph:build:external');
-    expect(scopesFor(ATTRIBUTION_QUERY)).toContain('read:graph:commit:external');
-  });
-
-  it('runs end to end against recorded payloads', async () => {
-    const caller = createRecordedCaller(SANDBOX_ATTRIBUTION_PAGES);
-    const result = await runPersistedQuery(caller, 'attribution', { decisionPrefix: 'decision/' }, (rows) => rows, {
-      sleep: async () => undefined,
-    });
-
-    expect(result.errorCode).toBeNull();
-    expect(result.pages).toBe(2);
-
-    const events = attributeFromRows(result.rows);
-    const summary = summariseAttribution(events);
-
-    expect(summary.decisions).toEqual(['0012-use-postgres-primary', '0031-datastore-monitoring']);
-    expect(summary.failedBuilds).toBe(1);
-    expect(summary.workItems).toBe(1);
-    expect(summary.pullRequests).toBe(1);
   });
 });
