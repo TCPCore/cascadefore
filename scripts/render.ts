@@ -13,6 +13,9 @@ import { createDemoSource } from '../src/demo/seedSource';
 import { parseIntentLocally } from '../src/domain/intent';
 import type { RunSnapshotDto } from '../src/shared/dtos';
 import type { Horizon } from '../src/shared/types';
+import { buildDecisionReport } from '../src/decisions/service';
+import { loadDecisionDirectory } from '../src/runner/load';
+import { createHostExecutors } from '../src/runner/executors';
 
 const CSS = readFileSync(new URL('../static/panel/src/styles.css', import.meta.url), 'utf8');
 
@@ -187,6 +190,62 @@ function renderRun(snapshot: RunSnapshotDto, intentText: string, label: string):
 const weeksIntent = 'Restore the build this week without adding a new dependency #no-new-dependency';
 const yearsIntent = 'Reduce maintenance burden over the next year';
 
+async function caseBaseHtml(): Promise<string> {
+  const loaded = await loadDecisionDirectory('examples/decision-repo/.decisions');
+  const report = await buildDecisionReport(
+    loaded.decisions,
+    createHostExecutors({ root: 'examples/decision-repo' }),
+  );
+
+  const rows = report.decisions
+    .map(
+      (d) => `<tr>
+        <td><span class="status status--${d.status}">${d.status}</span></td>
+        <td>${esc(d.decision)}</td>
+        <td class="num">${d.passed}✓ ${d.failed}✗ ${d.skipped}⤼</td>
+        <td class="muted">${esc(d.results[0]?.evidence.slice(0, 70) ?? '')}</td>
+      </tr>`,
+    )
+    .join('');
+
+  const growth = report.growth
+    .map((point) => {
+      const confidence = point.top?.confidence ?? 0;
+      return `<div class="growth__col">
+        <div class="growth__value">${point.top ? point.top.confidence.toFixed(2) : '—'}</div>
+        <div class="growth__track"><div class="growth__bar ${point.top ? 'growth__bar--on' : ''}" style="height:${Math.max(4, confidence * 100)}%"></div></div>
+        <div class="growth__label">${point.n}</div>
+      </div>`;
+    })
+    .join('');
+
+  const patterns = report.patterns
+    .map(
+      (p) => `<li class="pattern">
+        <div class="pattern__top"><span class="pattern__conf">${p.confidence.toFixed(2)}</span>
+        <span class="pattern__support">${p.confirmations} held · ${p.refutations} refuted</span></div>
+        <p class="pattern__text">${esc(p.patternText)}</p>
+      </li>`,
+    )
+    .join('');
+
+  return `
+  <section class="card">
+    <header class="card__head"><h2>Case base</h2>
+      <span class="muted">${report.testability.testable} of ${report.testability.total} decisions are machine-checkable</span></header>
+    <div class="stats">
+      <div class="stat stat--good"><span class="stat__value">${report.counts.enforced}</span><span class="stat__label">enforced</span></div>
+      <div class="stat stat--bad"><span class="stat__value">${report.counts.violated}</span><span class="stat__label">violated</span></div>
+      <div class="stat stat--warn"><span class="stat__value">${report.counts.orphaned}</span><span class="stat__label">orphaned</span></div>
+      <div class="stat"><span class="stat__value">${Math.round(report.testability.rate * 100)}%</span><span class="stat__label">testable</span></div>
+      <div class="stat"><span class="stat__value">${report.patterns.length}</span><span class="stat__label">patterns</span></div>
+    </div>
+    <div class="growth">${growth}</div>
+    <ul class="patterns">${patterns}</ul>
+    <table class="results"><tbody>${rows}</tbody></table>
+  </section>`;
+}
+
 async function main(): Promise<void> {
 const [weeks, years] = await Promise.all([
   run('weeks', weeksIntent),
@@ -195,6 +254,8 @@ const [weeks, years] = await Promise.all([
 
 const weeksBest = weeks.recommendation?.kind === 'graft' ? weeks.recommendation.best.label : 'none';
 const yearsBest = years.recommendation?.kind === 'graft' ? years.recommendation.best.label : 'none';
+
+const caseBase = await caseBaseHtml();
 
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Cascade — offline report</title>
@@ -220,6 +281,8 @@ const html = `<!doctype html>
       week horizon recommends <code>${esc(weeksBest)}</code>;
       year horizon recommends <code>${esc(yearsBest)}</code>.
     </div>
+
+    ${caseBase}
 
     ${renderRun(weeks, weeksIntent, 'Run 1 — restore service this week')}
     ${renderRun(years, yearsIntent, 'Run 2 — reduce maintenance over a year')}
