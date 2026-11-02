@@ -121,13 +121,16 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
-| DAC-050 | Diagnose and fix Jira panel mount (Manage-apps check) | [!] | 1d | DAC-005 |
+| DAC-050 | Diagnose Jira panel mount — **resolved: panels are hidden behind a manual "Apps" panel by design** ([ECO-1643](https://jira.atlassian.com/browse/ECO-1643) "Not Being Considered") | [x] | 1d | DAC-005 |
 | DAC-051 | Jira `issueContext` + `issuePanel` render decision status for the issue | [~] | 1d | DAC-050 |
 | DAC-052 | Confluence byline item showing decision status on a page | [ ] | 1d | DAC-040 |
 | DAC-053 | Rovo agent "Decision Advisor" (prompt + skill + actions) | [~] | 1.5d | DAC-035 |
 | DAC-054 | `record-decision`, `run-decision-test`, `find-similar`, `attribute-outcome` actions | [~] | 1d | DAC-035 |
 | DAC-055 | `rovo:mcp` — 4 tools, admin-exposure documented | [~] | 0.5d | DAC-054 |
 | DAC-056 | Standalone host parity (event selector already in place) | [x] | — | — |
+| DAC-057 | `jira:dashboardGadget` — **Decision health** gadget (renders without a manual Apps click) | [ ] | 1.5d | DAC-035 |
+| DAC-058 | `confluence:contentBylineItem` — decision status on the page byline (auto-renders) | [ ] | 1d | DAC-052 |
+| DAC-059 | Demo script leads with Rovo agent + standalone host; Jira click-path shown honestly | [ ] | 0.5d | DAC-061 |
 
 **Gate E5:** agent answers "is decision 0012 still followed?" with status + evidence + linked event. (60s video beat.)
 
@@ -175,7 +178,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | Retrieval utility | DAC-033 | <50% of retrieved cases judged relevant across 10 decisions |
 | Pattern stability | DAC-031 | >50% of patterns contradicted by the 4th case |
 | Attribution sparsity | DAC-041 | <50% of violations link to a downstream graph event |
-| Panel mount | DAC-050 | still zero invocations after the Manage-apps check |
+| Panel mount | DAC-050 | **FIRED** — panels require a manual "Apps" click (ECO-1643 declined). Mitigation: dashboard gadget + byline item + agent-led demo. |
 
 ## 8. Tracking convention
 
@@ -188,5 +191,5 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 ## 9. Current snapshot (2 Nov)
 
 **Done:** E0, E1, E2 core (registry/lifecycle/file_match fixture), E3 core (retrieval/patterns/growth), standalone host + decision UI foundation.
-**Blocked:** DAC-050 (Jira panel mount — zero invocations, needs the Manage-apps check).
+**Unblocked 2 Nov:** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
 **Next in queue:** DAC-025 (runner CLI) → DAC-026 (commit statuses) → DAC-028 (Confluence mirror) → DAC-034 (case-base SQL).
