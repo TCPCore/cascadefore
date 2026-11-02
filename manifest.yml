@@ -52,8 +52,10 @@ modules:
       handler: actions/runCascade.runCascadeAction
     - key: register-queries
       handler: graph/registerQueries.registerQueriesHandler
-    - key: probe-graph-fn
-      handler: actions/probeGraph.probeGraphAction
+    - key: get-run-fn
+      handler: actions/getRun.getRunAction
+    - key: health-fn
+      handler: actions/health.healthAction
 
   consumer:
     - key: cascade-jobs
@@ -86,17 +88,31 @@ modules:
           required: false
           description: One of weeks, quarters or years
 
-    # Registration as a tool: Forge CLI 15 has no `invoke`, so a client call is
-    # how the persisted Cypher actually gets registered.
-    - key: probe-graph
-      name: Probe Teamwork Graph access
-      function: probe-graph-fn
+    - key: get-run
+      name: Get reconstruction run
+      function: get-run-fn
       actionVerb: GET
       description: |
-        Diagnostic. Calls the Teamwork Graph endpoint as the app and as the user
-        and reports the status of each, to establish which identity can read it.
+        Fetch a persisted reconstruction by run id, including decisions, branches
+        and the recommendation.
+      inputs:
+        runId:
+          title: Run id
+          type: string
+          required: true
+          description: The runId returned by reconstruct-decision
+
+    - key: health
+      name: Cascade health
+      function: health-fn
+      actionVerb: GET
+      description: |
+        Report whether the app is configured for the real Teamwork Graph or
+        running on the seeded demo graph.
       inputs: {}
 
+    # Registration is a contributor action and needs a UI user session, so it is
+    # an action but deliberately not exposed over MCP.
     - key: bootstrap-queries
       name: Register Teamwork Graph queries
       function: register-queries
@@ -135,8 +151,8 @@ modules:
       name: Cascade
       tools:
         - reconstruct-decision
-        - bootstrap-queries
-        - probe-graph
+        - get-run
+        - health
 
   sql:
     - key: cascade-db

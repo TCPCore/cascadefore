@@ -154,9 +154,19 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
       (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, intent_json, intent_source,
        spine_json, recommendation_json, stats_json, scope_probe_json, dossier_url, error_code, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE status = VALUES(status), stage = VALUES(stage),
-        recommendation_json = VALUES(recommendation_json), dossier_url = VALUES(dossier_url),
-        error_code = VALUES(error_code)`,
+      ON DUPLICATE KEY UPDATE
+        status = VALUES(status),
+        stage = VALUES(stage),
+        event_json = VALUES(event_json),
+        intent_json = VALUES(intent_json),
+        intent_source = VALUES(intent_source),
+        spine_json = VALUES(spine_json),
+        recommendation_json = VALUES(recommendation_json),
+        stats_json = VALUES(stats_json),
+        scope_probe_json = VALUES(scope_probe_json),
+        dossier_url = VALUES(dossier_url),
+        error_code = VALUES(error_code),
+        completed_at = VALUES(completed_at)`,
     params: [
       snapshot.runId,
       snapshot.workItemKey,

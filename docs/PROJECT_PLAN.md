@@ -193,6 +193,10 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 ## 9. Current snapshot (2 Nov)
 
 **Done:** E0, E1, E2 core (registry/lifecycle/file_match fixture), E3 core (retrieval/patterns/growth), standalone host + decision UI foundation.
+**Proven 2 Nov (MCP round trip):** `health` → `reconstruct-decision` → `get-run` all work over MCP. `get-run` reads the run back from Forge SQL on a *later* invocation, so the loop is MCP → action → pipeline → SQL write → SQL read → MCP response. Found and fixed a third invocation-only bug: the run upsert updated only five columns, so `stats_json` kept its first-write default `{}`.
+
+**MCP surface decided:** three real tools (`reconstruct-decision`, `get-run`, `health`). Diagnostics removed — `probe-graph` deleted (its question is answered), `bootstrap-queries` demoted to an action because registration needs a UI user session.
+
 **Proven 2 Nov (MCP channel):** the app executes. `tools/list` returns `reconstruct-decision`, `bootstrap-queries`, `probe-graph`; `reconstruct-decision_development` completed end to end (pipeline → Forge SQL → response) with runId `run_mvzm0fgl_7fe33bcf`. `forge logs -e development` shows the invocations.
 
 **Blocked 2 Nov (graph via MCP): impossible.** The MCP gateway's `scopes_supported` lists 22 scopes and **zero `read:graph:*`**. Probed both identities against `/gateway/api/graphql/twg`: `asApp` → 401 "Unauthorized; scope does not match"; `asUser` → "Authentication Required". Teamwork Graph needs a real user session, which only exists in a UI context. Graph verification therefore depends on the panel mounting, or on registering queries manually in TWG Labs (see [queries-for-twg-labs.md](queries-for-twg-labs.md)).
