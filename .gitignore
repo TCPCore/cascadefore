@@ -1,0 +1,11 @@
+node_modules/
+static/panel/node_modules/
+static/panel/build/
+.forge/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example

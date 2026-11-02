@@ -1,0 +1,29 @@
+{
+  "name": "cascade",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cascade \u2014 counterfactual decision-path reconstruction for Jira, built on Forge + Teamwork Graph.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:panel": "npm --prefix static/panel run build",
+    "verify": "npm run typecheck && npm test && npm run build:panel",
+    "lint": "forge lint",
+    "deploy": "forge deploy",
+    "install:app": "forge install",
+    "register:queries": "forge invoke --function register-queries"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@forge/api": "^8.4.0",
+    "@forge/events": "^3.0.9",
+    "@forge/llm": "^1.0.9",
+    "@forge/resolver": "^2.0.2",
+    "@forge/sql": "^4.0.9"
+  }
+}
