@@ -99,3 +99,27 @@ Whether a Confluence page can reach a work item by *any* relationship. Three
 candidates failed. A schema browser in TWG Labs would answer it in one view; a
 few more candidate names would answer it in a few queries. It does not block the
 product, because the mirror owns that link.
+
+---
+
+## A fourth instance of the same failure class
+
+Three schema assumptions produced plausible-looking output that was silently wrong:
+
+| Instance | Assumption | Reality | Cost |
+|---|---|---|---|
+| Label | `JiraWorkItem` | `JiraIssue` | every `MATCH` failed |
+| Properties | flat and filterable | hydrated; filter in code | every `WHERE` failed |
+| Relationship names | documented names plan | unknown names **error** | a whole query dies, not one hop |
+| Comment identity | the comment name is the label | every reply is `Re: <page>` | three branches with one label |
+
+The common thread: **a schema assumption whose output looks plausible.** Three
+identical "Re: Mobile Development Strategy" branches do not look broken unless you
+read them — they look like three threads. It is only broken because a comment's
+identity is its text, not its subject line.
+
+That is the same shape as "unknown relationship types error rather than return
+empty": a failure mode wearing another failure mode's clothes.
+
+**Response:** the extractor now asserts distinctness of branch labels in a test,
+rather than hoping for it. Plausible output is not evidence; an assertion is.

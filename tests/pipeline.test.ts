@@ -131,18 +131,24 @@ describe('pipeline against recorded live graph data', () => {
     });
 
     expect(snapshot.status).toBe('loaded');
-    expect(snapshot.nodes.length).toBe(3);
-    expect(snapshot.branches.length).toBeGreaterThanOrEqual(3);
+    // One decision, three positions — a thread is a decision, not three.
+    expect(snapshot.nodes.length).toBe(1);
+    expect(snapshot.branches.length).toBe(3);
 
     // Real ARIs, so anything the UI links resolves on the site.
     for (const node of snapshot.nodes) {
       expect(node.ari).toMatch(/^ari:cloud:confluence:e264c23b/);
     }
 
-    // Labels carry the comment text, not the shared "Re: <page>" subject.
-    const labels = snapshot.nodes.map((n) => n.title);
-    expect(new Set(labels).size).toBe(3);
-    expect(labels.some((l) => /Finance/i.test(l))).toBe(true);
+    // The node is the page; the branches are the positions people took.
+    expect(snapshot.nodes[0]?.title).toMatch(/Mobile Development Strategy/);
+    const positions = snapshot.branches.map((b) => b.label);
+    expect(new Set(positions).size).toBe(3);
+    expect(positions.some((l) => /Finance/i.test(l))).toBe(true);
+
+    // The resolution in plain speech is the taken branch.
+    const taken = snapshot.branches.find((b) => b.taken);
+    expect(taken?.label).toMatch(/Yes, for now/i);
 
     expect(LIVE_ARTIFACTS.length).toBe(5);
   });

@@ -34,7 +34,16 @@ export interface RawArtifact {
 
 export const ADR_TITLE = /\b(adr|decision record|rfc|design doc|architecture decision)\b/i;
 export const ADR_BODY = /\b(options considered|alternatives considered|decision outcome|consequences)\b/i;
-export const RESOLUTION_MARKER = /\b(we(?:'| a)ll go with|decided|closing as|agreed to|let'?s go with|locking this in)\b/i;
+/**
+ * Resolution markers.
+ *
+ * Real threads resolve in prose: "Yes, for now", "approved", "signing off".
+ * The first version only matched formal phrasing ("decided", "agreed to"), so a
+ * genuine resolution in plain speech was missed and the *first* comment was
+ * mistaken for the decision — plausible output, silently wrong.
+ */
+export const RESOLUTION_MARKER =
+  /\b(we(?:'| a)ll go with|decided|closing as|agreed to|let'?s go with|locking this in|approved|sign(?:ed|ing)? off|yes,? for now|yes[,.]? (?:let'?s|we)|go ahead|ship it)\b/i;
 
 export interface Classification {
   kind: DecisionKind;
@@ -128,6 +137,105 @@ export function toDecisionNode(artifact: RawArtifact, classification: Classifica
   };
 }
 
+/**
+ * Thread clustering.
+ *
+ * Every reply on a page shares the same subject line, so treating each comment
+ * as its own decision produces three identical-looking nodes — a comment viewer
+ * with a scoring function, not a decision reconstructor.
+ *
+ * A thread is one decision: the page provides the subject, the comments provide
+ * the positions, and the comment carrying a resolution marker is the branch that
+ * was taken. Distinctness of the resulting labels is asserted by a test, because
+ * "three identical branches" is exactly the kind of plausible-looking output
+ * that hides a modelling error.
+ */
+export interface ThreadCluster {
+  area: string;
+  page: RawArtifact | null;
+  comments: RawArtifact[];
+}
+
+export function clusterThreads(artifacts: readonly RawArtifact[]): ThreadCluster[] {
+  const byArea = new Map<string, ThreadCluster>();
+
+  for (const artifact of artifacts) {
+    const isComment = artifact.type === 'confluence-comment' || artifact.type === 'jira-comment';
+    const isPage = artifact.type === 'confluence-page';
+    if (!isComment && !isPage) continue;
+
+    const area = areaOf(artifact);
+    const cluster = byArea.get(area) ?? { area, page: null, comments: [] };
+
+    if (isPage && !cluster.page) cluster.page = artifact;
+    if (isComment) cluster.comments.push(artifact);
+
+    byArea.set(area, cluster);
+  }
+
+  return [...byArea.values()].filter((cluster) => cluster.comments.length > 0);
+}
+
+function latestIso(values: readonly string[]): Iso {
+  return values.reduce((latest, value) => (Date.parse(value) > Date.parse(latest) ? value : latest), values[0]!);
+}
+
+export interface ThreadDecision {
+  node: DecisionNode;
+  branches: Branch[];
+}
+
+export function buildThreadDecision(cluster: ThreadCluster): ThreadDecision | null {
+  if (cluster.comments.length === 0) return null;
+
+  const ordered = [...cluster.comments].sort(
+    (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt),
+  );
+
+  const resolution = ordered.filter((c) => RESOLUTION_MARKER.test(c.bodyText ?? '')).at(-1);
+  const decidedAt = latestIso(ordered.map((c) => c.createdAt));
+  const title = cluster.page?.title ?? `Discussion in ${cluster.area}`;
+
+  const nodeId = stableId('node', 'thread', cluster.area);
+  const evidence = [...(cluster.page ? [toEvidence(cluster.page)] : []), ...ordered.map(toEvidence)];
+
+  const confidence = Math.min(
+    0.6 + 0.05 * Math.min(ordered.length, 4) + (resolution ? 0.05 : 0),
+    0.85,
+  );
+
+  const node: DecisionNode = {
+    id: nodeId,
+    ari: cluster.page?.ari ?? ordered[0]!.ari,
+    kind: 'thread',
+    title,
+    decidedAt,
+    actorAris: ordered.map((c) => c.authorAri).filter((a): a is string => Boolean(a)),
+    confidence,
+    evidence,
+  };
+
+  const branches: Branch[] = ordered.map((comment, index) => {
+    const isResolution = resolution?.ari === comment.ari;
+    return {
+      id: stableId('br', 'position', comment.ari),
+      nodeId,
+      label: (comment.bodyText ?? comment.title).trim().slice(0, 90) || `position ${index + 1}`,
+      taken: isResolution,
+      evidence: [toEvidence(comment)],
+      downstreamNodeIds: [],
+      requiredDependencies: [],
+      unwindsNodeIds: [],
+    };
+  });
+
+  // A thread with no resolution marker is still a decision — nobody just recorded
+  // the outcome. The first position is treated as the one in force.
+  if (!resolution && branches.length > 0) branches[0]!.taken = true;
+
+  return { node, branches };
+}
+
 export interface Assembly {
   nodes: DecisionNode[];
   spine: SpineSegment[];
@@ -140,60 +248,89 @@ export interface Assembly {
  * every later decision on the spine — those are the segments to unwind.
  */
 export function assemble(artifacts: readonly RawArtifact[], failureAt: Iso): Assembly {
-  const decisions: Array<{ artifact: RawArtifact; classification: Classification }> = [];
+  const clusters = clusterThreads(artifacts);
+  const commentAris = new Set(clusters.flatMap((cluster) => cluster.comments.map((c) => c.ari)));
 
+  // Documented decisions, excluding comments: a comment is a position inside a
+  // decision, not a decision of its own.
+  const documented: Array<{ artifact: RawArtifact; classification: Classification }> = [];
   for (const artifact of artifacts) {
+    if (commentAris.has(artifact.ari)) continue;
     const classification = classifyArtifact(artifact);
-    if (classification) decisions.push({ artifact, classification });
+    if (classification) documented.push({ artifact, classification });
   }
 
-  decisions.sort((a, b) => Date.parse(b.artifact.createdAt) - Date.parse(a.artifact.createdAt));
+  const threadDecisions = clusters
+    .map(buildThreadDecision)
+    .filter((value): value is ThreadDecision => value !== null);
 
-  const capped = decisions.slice(0, MAX_SPINE_DEPTH);
-  const nodes = capped.map((d) => toDecisionNode(d.artifact, d.classification));
+  interface Entry {
+    node: DecisionNode;
+    artifact: RawArtifact | null;
+    thread: ThreadDecision | null;
+  }
 
-  const spine: SpineSegment[] = capped.map((d, index) => ({
-    nodeId: nodes[index]!.id,
-    ari: d.artifact.ari,
-    title: d.artifact.title,
+  const entries: Entry[] = [
+    ...documented.map((d) => ({
+      node: toDecisionNode(d.artifact, d.classification),
+      artifact: d.artifact,
+      thread: null,
+    })),
+    ...threadDecisions.map((t) => ({ node: t.node, artifact: null, thread: t })),
+  ];
+
+  entries.sort((a, b) => Date.parse(b.node.decidedAt) - Date.parse(a.node.decidedAt));
+  const capped = entries.slice(0, MAX_SPINE_DEPTH);
+
+  const nodes = capped.map((entry) => entry.node);
+  const spine: SpineSegment[] = capped.map((entry, index) => ({
+    nodeId: entry.node.id,
+    ari: entry.node.ari,
+    title: entry.node.title,
     order: index,
-    dependentCount: d.artifact.dependentCount ?? 0,
-    resolved: d.artifact.outcome === 'passed',
+    dependentCount:
+      entry.artifact?.dependentCount ??
+      entry.thread?.node.evidence.filter((e) => e.type === 'confluence-comment').length ??
+      0,
+    resolved: entry.artifact?.outcome === 'passed',
   }));
-
-  const byArea = new Map<string, Array<{ artifact: RawArtifact; node: DecisionNode; order: number }>>();
-  capped.forEach((d, index) => {
-    const area = areaOf(d.artifact);
-    const node = nodes[index]!;
-    const entry = byArea.get(area) ?? [];
-    entry.push({ artifact: d.artifact, node, order: index });
-    byArea.set(area, entry);
-  });
 
   const branches: Branch[] = [];
   const areaByBranchId = new Map<string, string>();
   const alternativesByArea = new Map<string, Branch[]>();
 
-  for (const [area, entries] of byArea) {
-    const first = entries[0];
+  // Documented decisions keep the taken/alternative treatment per area.
+  const documentedByArea = new Map<
+    string,
+    Array<{ artifact: RawArtifact; node: DecisionNode; order: number }>
+  >();
+
+  capped.forEach((entry, index) => {
+    if (!entry.artifact) return;
+    const area = areaOf(entry.artifact);
+    const list = documentedByArea.get(area) ?? [];
+    list.push({ artifact: entry.artifact, node: entry.node, order: index });
+    documentedByArea.set(area, list);
+  });
+
+  for (const [area, list] of documentedByArea) {
+    const first = list[0];
     if (!first) continue;
 
-    // The earliest recorded decision in an area is the taken path.
     const taken: Branch = {
       id: stableId('br', 'taken', first.node.id),
       nodeId: first.node.id,
       label: first.artifact.title,
       taken: true,
       evidence: [toEvidence(first.artifact)],
-      downstreamNodeIds: entries.slice(1).map((e) => e.node.id),
+      downstreamNodeIds: list.slice(1).map((e) => e.node.id),
       requiredDependencies: first.artifact.componentAri ? [first.artifact.componentAri] : [],
       unwindsNodeIds: [],
     };
     branches.push(taken);
     areaByBranchId.set(taken.id, area);
 
-    const alternatives = entries.slice(1, 1 + MAX_BRANCHES_PER_NODE);
-    for (const alt of alternatives) {
+    for (const alt of list.slice(1, 1 + MAX_BRANCHES_PER_NODE)) {
       const branch: Branch = {
         id: stableId('br', 'alt', alt.node.id),
         nodeId: alt.node.id,
@@ -206,22 +343,25 @@ export function assemble(artifacts: readonly RawArtifact[], failureAt: Iso): Ass
       };
       branches.push(branch);
       areaByBranchId.set(branch.id, area);
-      const list = alternativesByArea.get(area) ?? [];
-      list.push(branch);
-      alternativesByArea.set(area, list);
+      const bucket = alternativesByArea.get(area) ?? [];
+      bucket.push(branch);
+      alternativesByArea.set(area, bucket);
     }
   }
 
-  // Outcomes are evidence, never decisions: a build that passed on an
-  // alternative path is the strongest available proof that the path was viable.
+  // Thread decisions carry their positions as branches.
+  for (const entry of capped) {
+    if (!entry.thread) continue;
+    branches.push(...entry.thread.branches);
+  }
+
   const outcomeArtifacts = artifacts.filter(
     (a) => a.type === 'external-build' || a.type === 'external-deployment' || a.type === 'external-pull-request',
   );
 
   for (const outcome of outcomeArtifacts) {
     const area = areaOf(outcome);
-    const targets = alternativesByArea.get(area) ?? [];
-    for (const branch of targets) {
+    for (const branch of alternativesByArea.get(area) ?? []) {
       branch.evidence.push(toEvidence(outcome));
     }
   }
