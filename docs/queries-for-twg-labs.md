@@ -109,3 +109,37 @@ LIMIT $limit
 For each query: **validated and saved** (then paste the generated query key), or
 the **validation error text** verbatim. The error names the offending
 relationship or object type, which is the thing I cannot guess from the docs.
+
+---
+
+## Confirmed edges (2 Nov)
+
+`jira_space_has_jira_work_item` **works** and returned `CX-11`:
+
+```yaml
+space: JiraSpace  key=CX  name="Core Experience"
+item:  JiraWorkItem  key=CX-11  issueId=66400
+       ari:cloud:jira:e264c23b-67d7-48c5-ba33-9ef74f000ab6:issue/66400
+```
+
+Two consequences:
+
+1. Teamwork Graph indexed a work item created roughly an hour earlier — sync is
+   effectively immediate, so the demo can rely on freshly created content.
+2. A bare `MATCH (item:JiraIssue) … LIMIT n` returns an **arbitrary window**, so the
+   target issue is usually absent. The spine must filter, and only `ari` can be
+   filtered on — a key alone is not enough, because the ARI needs the numeric
+   `issueId`.
+
+## Final probe — does `ari` filtering work?
+
+```cypher
+MATCH (item:JiraIssue {ari: 'ari:cloud:jira:e264c23b-67d7-48c5-ba33-9ef74f000ab6:issue/66400'})
+OPTIONAL MATCH (item)-[:jira_work_item_has_jira_work_item_comment]->(c:JiraWorkItemComment)
+OPTIONAL MATCH (space:JiraSpace)-[:jira_space_has_jira_work_item]->(item)
+OPTIONAL MATCH (item)-[:jira_work_item_links_external_build]->(build:ExternalBuild)
+RETURN item, c, space, build LIMIT 6
+```
+
+If this returns the CX-11 node, the spine is fully validated: label, `ari` filter,
+and three edges in one query.
