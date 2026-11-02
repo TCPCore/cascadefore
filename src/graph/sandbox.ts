@@ -179,20 +179,21 @@ export const SANDBOX_PAGES: Record<string, RowSpec[][]> = {
   spine: [
     [
       {
-        page: page('page-ADR-014', 'ADR-014: keep the billing schema unsharded', '2026-03-12T10:00:00.000Z'),
         workItem: {
           __typename: 'CypherQueryResultNode',
           id: 'ari:cloud:jira::issue/CX-11',
           data: { __typename: 'JiraWorkItem', key: 'CX-11', summary: 'Checkout build failed' },
         },
+        workItemComment: comment('cmt-0', 'we could shard by tenant', '2026-03-11T09:00:00.000Z'),
       },
     ],
     [
       {
-        pageComment: comment('cmt-1', 'we could shard by tenant instead', '2026-03-13T09:00:00.000Z'),
-        linkedWorkItems: {
-          __typename: 'CypherQueryResultListNode',
-          nodes: [{ id: 'ari:cloud:jira::issue/CX-9', data: { __typename: 'JiraWorkItem', key: 'CX-9' } }],
+        page: page('page-ADR-014', 'ADR-014: keep the billing schema unsharded', '2026-03-12T10:00:00.000Z'),
+        build: {
+          __typename: 'CypherQueryResultNode',
+          id: 'ari:cloud:bitbucket::build/77',
+          data: { __typename: 'ExternalBuild', name: 'decision/0031-datastore-monitoring', state: 'FAILED' },
         },
       },
     ],

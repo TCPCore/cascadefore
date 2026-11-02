@@ -39,8 +39,8 @@ describe('graph sandbox', () => {
     // A single row on the first page that still has a next page.
     const caller = createRecordedCaller({
       spine: [
-        [{ page: { __typename: 'CypherQueryResultNode', id: 'p1', data: { __typename: 'ConfluencePage', title: 'A', createdAt: NOW } } }],
-        [{ page: { __typename: 'CypherQueryResultNode', id: 'p2', data: { __typename: 'ConfluencePage', title: 'B', createdAt: NOW } } }],
+        [{ workItem: { __typename: 'CypherQueryResultNode', id: 'i1', data: { __typename: 'JiraWorkItem', key: 'A-1', summary: 'A', createdAt: NOW } } }],
+        [{ workItem: { __typename: 'CypherQueryResultNode', id: 'i2', data: { __typename: 'JiraWorkItem', key: 'A-2', summary: 'B', createdAt: NOW } } }],
       ],
     });
     const result = await collectArtifacts(caller);
@@ -112,9 +112,10 @@ describe('graph source against the sandbox', () => {
       now: () => NOW,
     });
     const collection = await source.collect('CX-11');
-    const build = collection.artifacts.find((a) => a.type === 'external-build');
-    expect(build?.outcome).toBe('passed');
-    expect(build?.implementationProof).toBe(true);
+    const builds = collection.artifacts.filter((a) => a.type === 'external-build');
+    expect(builds.length).toBeGreaterThan(0);
+    expect(builds.some((b) => b.outcome === 'passed' && b.implementationProof)).toBe(true);
+    expect(builds.some((b) => b.outcome === 'failed')).toBe(true);
   });
 
   it('probes scopes without throwing when the graph is empty', async () => {

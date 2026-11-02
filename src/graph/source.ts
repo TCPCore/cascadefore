@@ -65,6 +65,20 @@ function artifactFrom(value: unknown, fallback: Iso): RawArtifact | null {
         title: str(data.summary, str(data.key, 'Work item')),
         createdAt: iso(data.createdAt, fallback),
       };
+    case 'ExternalBuild':
+    case 'ExternalCommit': {
+      const state = str(data.state, str(data.status)).toUpperCase();
+      const passed = state === 'SUCCESSFUL' || state === 'PASSED';
+      const failed = state === 'FAILED';
+      return {
+        ari: node.id,
+        type: typename === 'ExternalBuild' ? 'external-build' : 'external-pull-request',
+        title: str(data.name, str(data.message, `${typename} ${node.id}`)),
+        createdAt: iso(data.createdAt, fallback),
+        implementationProof: passed,
+        outcome: passed ? 'passed' : failed ? 'failed' : 'unknown',
+      };
+    }
     default:
       return null;
   }
@@ -75,10 +89,29 @@ function artifactFrom(value: unknown, fallback: Iso): RawArtifact | null {
  * comment and an author at once; each is extracted independently so the
  * traversal does not lose evidence when a row is partially populated.
  */
+/**
+ * The graph cannot be filtered by issue key — `key` and `summary` are hydrated
+ * fields, not Cypher properties — so the query returns a bounded window and the
+ * target row is chosen here by its hydrated `key`. Correctness over efficiency,
+ * and only safe because the window is capped.
+ */
+export function selectWorkItemRows(
+  rows: readonly RawRow[],
+  workItemKey: string,
+): readonly RawRow[] {
+  const matches = rows.filter((row) => {
+    const node = asNode(row.columns.workItem);
+    const key = node?.data ? str(node.data.key) : '';
+    return key === workItemKey;
+  });
+  return matches.length > 0 ? matches : rows;
+}
+
 export function mapSpineRows(rows: readonly RawRow[], fallback: Iso): RawArtifact[] {
   const out: RawArtifact[] = [];
   for (const row of rows) {
-    for (const key of ['page', 'pageComment', 'workItem', 'linkedWorkItems']) {
+    // Column names must match the RETURN clause in SPINE_QUERY.
+    for (const key of ['workItem', 'workItemComment', 'jiraSpace', 'linkedWorkItem', 'remoteLink', 'build']) {
       const value = row.columns[key];
       if (!value) continue;
       const list = (value as { nodes?: unknown[] }).nodes;
@@ -99,14 +132,16 @@ export function mapSpineRows(rows: readonly RawRow[], fallback: Iso): RawArtifac
 export function mapBranchRows(rows: readonly RawRow[], fallback: Iso): RawArtifact[] {
   const out: RawArtifact[] = [];
   for (const row of rows) {
-    const comment = artifactFrom(row.columns.thread, fallback);
-    if (comment) {
-      const replies = (row.columns.replies as { nodes?: unknown[] } | null)?.nodes ?? [];
-      comment.replyCount = replies.length;
-      out.push(comment);
-    }
+    // Column names must match the RETURN clause in BRANCH_QUERY.
     const page = artifactFrom(row.columns.page, fallback);
     if (page) out.push(page);
+
+    const comment = artifactFrom(row.columns.comment, fallback);
+    if (comment) {
+      // The traversal returns individual comments, not reply counts.
+      comment.replyCount = 1;
+      out.push(comment);
+    }
   }
   return out;
 }

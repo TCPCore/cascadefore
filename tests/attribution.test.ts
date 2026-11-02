@@ -108,7 +108,7 @@ describe('attribution summary', () => {
 describe('attribution query', () => {
   it('declares the scopes its traversal touches', () => {
     expect(scopesFor(ATTRIBUTION_QUERY)).toContain('read:graph:build:external');
-    expect(scopesFor(ATTRIBUTION_QUERY)).toContain('read:graph:repository:external');
+    expect(scopesFor(ATTRIBUTION_QUERY)).toContain('read:graph:commit:external');
   });
 
   it('runs end to end against recorded payloads', async () => {
