@@ -143,3 +143,49 @@ RETURN item, c, space, build LIMIT 6
 
 If this returns the CX-11 node, the spine is fully validated: label, `ari` filter,
 and three edges in one query.
+
+---
+
+## Round 2 — the four edges still unproven
+
+`ari` filtering is **confirmed** (returned CX-11 exactly). What is not yet proven is
+whether each edge exists *and* has data. Each query below is independent — run it,
+paste the JSON, or paste the error.
+
+**E1 — do work-item comments exist anywhere?**
+
+```cypher
+MATCH (item:JiraIssue)-[:jira_work_item_has_jira_work_item_comment]->(c:JiraWorkItemComment)
+RETURN item, c LIMIT 3
+```
+
+**E2 — do external builds ever link to a work item?**
+
+```cypher
+MATCH (item:JiraIssue)-[:jira_work_item_links_external_build]->(b:ExternalBuild)
+RETURN item, b LIMIT 3
+```
+
+**E3 — do Confluence pages exist?**
+
+```cypher
+MATCH (p:ConfluencePage) RETURN p LIMIT 2
+```
+
+**E4 — do pages have comments?**
+
+```cypher
+MATCH (p:ConfluencePage)-[:document_has_comments]->(c:ConfluenceComment)
+RETURN p, c LIMIT 3
+```
+
+### How to read the answers
+
+| Result | Meaning |
+|---|---|
+| rows | edge exists and has data — wire it |
+| `{"edges": []}` | edge name is right, graph is empty for it — fixture stays |
+| error | edge name is wrong — the error names the correct one |
+
+An empty result is not a failure. It tells me the demo must seed that content,
+which the seeder already plans to do.
