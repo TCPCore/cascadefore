@@ -18,7 +18,9 @@ import { fileURLToPath } from 'node:url';
 import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
 import { createGraphSource } from '../src/graph/source';
-import { createRecordedCaller, SANDBOX_PAGES } from '../src/graph/sandbox';
+import { createRecordedCaller, SANDBOX_ATTRIBUTION_PAGES, SANDBOX_PAGES } from '../src/graph/sandbox';
+import { runPersistedQuery } from '../src/graph/client';
+import { attributeFromRows, summariseAttribution } from '../src/attribution/attribute';
 import { computeCaseBase, findSimilarFor } from '../src/decisions/service';
 import { DecisionStore } from '../src/decisions/store';
 import { createSqliteDriver } from '../src/storage/sqliteDriver';
@@ -210,6 +212,25 @@ const server = createServer((req, res) => {
       (error: unknown) =>
         sendJson(res, 500, { error: 'CASE_BASE_FAILED', message: error instanceof Error ? error.message : String(error) }),
     );
+    return;
+  }
+
+  if (url === '/api/attribution') {
+    void (async () => {
+      const caller = createRecordedCaller(SANDBOX_ATTRIBUTION_PAGES);
+      const result = await runPersistedQuery(
+        caller,
+        'attribution',
+        { decisionPrefix: 'decision/', limit: 25 },
+        (rows) => rows,
+        { sleep: async () => undefined },
+      );
+      sendJson(res, 200, {
+        errorCode: result.errorCode,
+        pages: result.pages,
+        summary: summariseAttribution(attributeFromRows(result.rows)),
+      });
+    })();
     return;
   }
 

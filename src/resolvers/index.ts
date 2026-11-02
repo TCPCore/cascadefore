@@ -4,6 +4,8 @@ import { buildDeps, isDemoMode, jobQueue, repository } from '../bootstrap';
 import { loadConfig } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
+import { buildDecisionReport, findSimilarFor } from '../decisions/service';
+import { loadSeedDecisions } from '../decisions/seed';
 import type { Horizon, Intent } from '../shared/types';
 
 interface StartPayload {
@@ -100,6 +102,24 @@ resolver.define('getRun', async (request: ResolverRequest<{ runId: string }>) =>
   if (!snapshot) return { error: 'NOT_FOUND', message: 'That run no longer exists.' };
 
   return { snapshot };
+});
+
+/**
+ * The case base, for the Forge-hosted panel and the Rovo agent.
+ *
+ * Currently computed from the bundled corpus. Once the Confluence mirror is
+ * live, this switches to ingesting `Decision record:` pages — the ingest and
+ * round-trip are already built and tested (`src/mirror/ingest.ts`); only the
+ * REST read is outstanding.
+ */
+resolver.define('decisionReport', async () => {
+  return buildDecisionReport(loadSeedDecisions());
+});
+
+resolver.define('similarDecisions', async (request: ResolverRequest<{ id: string }>) => {
+  const id = request.payload?.id;
+  if (!id) return { id: '', similar: [] };
+  return findSimilarFor(id, loadSeedDecisions());
 });
 
 /** Cheap health check the panel calls on mount to pick its empty state. */

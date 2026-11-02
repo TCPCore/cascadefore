@@ -15,6 +15,26 @@ modules:
 
   # Renders automatically in the issue's right-hand column, so the panel is
   # visible without hunting through a menu. This is the primary surface.
+  # Renders on a dashboard without the user opening an Apps panel, which is the
+  # only Jira surface that is discoverable by default in the 2026 work-item view.
+  jira:dashboardGadget:
+    - key: cascade-decision-health
+      resource: main
+      resolver:
+        function: resolver
+      title: Decision health
+      description: Decisions that still hold, decisions that broke, and decisions nobody can check.
+      thumbnail: resource:main;icon.svg
+
+  # Renders on every Confluence page it is scoped to, with no manual add step.
+  confluence:contentBylineItem:
+    - key: cascade-decision-byline
+      resource: main
+      resolver:
+        function: resolver
+      title: Cascade decisions
+      description: Decision records linked to this page
+
   jira:issueContext:
     - key: cascade-context
       resource: main

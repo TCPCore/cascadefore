@@ -85,7 +85,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-025 | **decisions-runner** CLI (`scripts/run-decisions.ts`): glob `.decisions/`, run, report | [x] | 1.5d | DAC-021 |
 | DAC-026 | Emit Bitbucket commit status `decision/<id>` from the runner | [x] | 0.5d | DAC-025 |
 | DAC-027 | `bitbucket-pipelines.yml` step wiring the runner | [x] | 0.5d | DAC-026 |
-| DAC-028 | Confluence mirror: runner posts decision + status to a Confluence space | [ ] | 1d | DAC-025 |
+| DAC-028 | Confluence mirror: page renderer, idempotent sync, storage-format round trip (**REST adapter pending**) | [~] | 1d | DAC-025 |
 | DAC-029 | Runner unit + e2e tests against a fixture repo | [x] | 1d | DAC-025 |
 
 **Gate E2:** push to a fixture repo → commit statuses appear → Confluence shows the decision record. (Screenshot.)
@@ -101,7 +101,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-034 | Forge SQL schema for `decisions`, `outcomes`, `patterns` (portable DDL) | [x] | 1d | DAC-040 |
 | DAC-035 | Case-base repository (insert/query) + schema bootstrap | [x] | 1d | DAC-034 |
 | DAC-067 | Adopt `migrationRunner.run()` from `@forge/sql` instead of hand-rolled `ensureSchema` | [ ] | 0.5d | DAC-034 |
-| DAC-036 | Ingest: Confluence mirror → case base on demand | [ ] | 1d | DAC-028, DAC-035 |
+| DAC-036 | Ingest: Confluence mirror → case base (parser + round-trip done, **REST read pending**) | [~] | 1d | DAC-028, DAC-035 |
 | DAC-037 | Case-base UI: list, status, growth curve, "similar to this" | [x] | 1.5d | DAC-033 |
 
 **Gate E3:** 4 decisions retrieve ≥2 similar + 1 pattern; a violation moves confidence. Demoable on :4173. (Screenshot.)
@@ -111,7 +111,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
 | DAC-040 | ~~Confirm TWG scopes~~ **confirmed: 15/15 Teamwork Graph scopes granted on site**; MCP tool call is the test harness (panel not required) | [~] | 0.5d | DAC-005 |
-| DAC-041 | Persisted Cypher: `decision/<id>` status → PR → build → incident | [ ] | 1.5d | DAC-040 |
+| DAC-041 | Persisted Cypher: `decision/<id>` status → PR → build → incident | [x] | 1.5d | DAC-040 |
 | DAC-042 | Verify relationship names in TWG Labs; correct `queries.ts` | [ ] | 0.5d | DAC-041 |
 | DAC-043 | Attribution UI: violated decision → linked downstream events | [ ] | 1d | DAC-041 |
 | DAC-044 | Scope probe wired into the empty state | [~] | 0.5d | DAC-040 |
@@ -124,12 +124,12 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 |---|---|---|---|---|
 | DAC-050 | Diagnose Jira panel mount — **resolved: panels are hidden behind a manual "Apps" panel by design** ([ECO-1643](https://jira.atlassian.com/browse/ECO-1643) "Not Being Considered") | [x] | 1d | DAC-005 |
 | DAC-051 | Jira `issueContext` + `issuePanel` render decision status for the issue | [~] | 1d | DAC-050 |
-| DAC-052 | Confluence byline item showing decision status on a page | [ ] | 1d | DAC-040 |
+| DAC-052 | Confluence byline item showing decision status on a page (**module added, component pending**) | [~] | 1d | DAC-040 |
 | DAC-053 | Rovo agent "Decision Advisor" (prompt + skill + actions) | [~] | 1.5d | DAC-035 |
-| DAC-054 | `record-decision`, `run-decision-test`, `find-similar`, `attribute-outcome` actions | [~] | 1d | DAC-035 |
+| DAC-054 | `record-decision`, `run-decision-test`, `find-similar`, `attribute-outcome` actions (2 of 4 resolvers) | [~] | 1d | DAC-035 |
 | DAC-055 | `rovo:mcp` — 4 tools, admin-exposure documented | [~] | 0.5d | DAC-054 |
 | DAC-056 | Standalone host parity (event selector already in place) | [x] | — | — |
-| DAC-057 | `jira:dashboardGadget` — **Decision health** gadget (renders without a manual Apps click) | [ ] | 1.5d | DAC-035 |
+| DAC-057 | `jira:dashboardGadget` — **Decision health** gadget (module + gadget auto-mode added) | [~] | 1.5d | DAC-035 |
 | DAC-058 | `confluence:contentBylineItem` — decision status on the page byline (auto-renders) | [ ] | 1d | DAC-052 |
 | DAC-059 | Demo script leads with Rovo agent + standalone host; Jira click-path shown honestly | [ ] | 0.5d | DAC-061 |
 
@@ -197,4 +197,5 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 **Unblocked 2 Nov (UI):** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
 **Done since:** runner CLI + commit statuses + pipeline config (DAC-023…027, 029), portable case-base SQL + ledger store (DAC-034/035), case-base UI (DAC-037).
-**Next in queue:** DAC-028 (Confluence mirror) → DAC-036 (ingest mirror) → DAC-041 (attribution Cypher) → DAC-057 (dashboard gadget).
+**Done since:** Confluence mirror renderer + idempotent sync + storage-format round trip (DAC-028), ingest parser + round trip (DAC-036), attribution query + mapper (DAC-041), dashboard gadget + byline modules (DAC-052/057), case-base resolvers.
+**Next in queue:** REST adapters for mirror/ingest → dashboard gadget component → demo seeder (DAC-060) → video.

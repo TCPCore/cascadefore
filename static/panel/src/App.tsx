@@ -46,8 +46,17 @@ export function App(): JSX.Element {
     void import('@forge/bridge')
       .then(({ view }) => view.getContext())
       .then((context: unknown) => {
-        const ctx = context as { extension?: { issue?: { key?: string } }; issueKey?: string };
+        const ctx = context as {
+          extension?: { type?: string; issue?: { key?: string } };
+          issueKey?: string;
+        };
         setIssueKey(ctx.extension?.issue?.key ?? ctx.issueKey ?? '');
+        // A dashboard gadget has no issue and no room for the reconstruction
+        // form, so it opens straight into the case base.
+        if (ctx.extension?.type === 'jira:dashboardGadget') {
+          setMode('cases');
+          setIssueKey(ctx.issueKey ?? 'dashboard');
+        }
       })
       .catch(() => setIssueKey(''));
   }, []);

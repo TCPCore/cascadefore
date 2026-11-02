@@ -13,7 +13,7 @@
  */
 
 export interface QuerySpec {
-  key: 'spine' | 'branches' | 'outcomes';
+  key: 'spine' | 'branches' | 'outcomes' | 'attribution';
   name: string;
   description: string;
   /** Object types touched anywhere in the traversal — including intermediate hops. */
@@ -94,7 +94,38 @@ RETURN component AS component,
 LIMIT $limit`,
 };
 
-export const QUERY_CATALOG: QuerySpec[] = [SPINE_QUERY, BRANCH_QUERY, OUTCOME_QUERY];
+/**
+ * ATTRIBUTION — the outcome ledger.
+ *
+ * Commit statuses published by the decisions runner are named `decision/<id>`.
+ * Atlassian syncs Bitbucket builds into Teamwork Graph, so those statuses arrive
+ * as graph objects for free. This traversal walks from such a build to the
+ * repository, the work items it touched, and any pull request or deployment in
+ * the same neighbourhood — which is how a violated decision gets linked to the
+ * incident that followed it, with no shared database.
+ *
+ * ⚠️  VERIFY relationship names in TWG Labs before relying on this.
+ */
+export const ATTRIBUTION_QUERY: QuerySpec = {
+  key: 'attribution',
+  name: 'cascade-attribution',
+  description: 'Decision outcome → build → repository → work items → PRs and deployments',
+  objectTypes: ['ExternalBuild', 'ExternalRepository', 'ExternalPullRequest', 'ExternalDeployment', 'JiraWorkItem'],
+  cypher: `MATCH (build:ExternalBuild)
+WHERE build.name STARTS WITH $decisionPrefix
+OPTIONAL MATCH (build)-[:external_build_in_repository]->(repo:ExternalRepository)
+OPTIONAL MATCH (build)<-[:external_build_related_to_jira_work_item]-(item:JiraWorkItem)
+OPTIONAL MATCH (build)-[:external_build_has_external_pull_request]->(pr:ExternalPullRequest)
+OPTIONAL MATCH (repo)-[:external_repository_has_external_deployment]->(deployment:ExternalDeployment)
+RETURN build AS build,
+       repo AS repository,
+       item AS workItem,
+       pr AS pullRequest,
+       deployment AS deployment
+LIMIT $limit`,
+};
+
+export const QUERY_CATALOG: QuerySpec[] = [SPINE_QUERY, BRANCH_QUERY, OUTCOME_QUERY, ATTRIBUTION_QUERY];
 
 /**
  * Teamwork Graph scope per object type. A missing scope does not error — it
@@ -120,6 +151,7 @@ export const SCOPE_FOR_OBJECT_TYPE: Record<string, string> = {
   ExternalDeployment: 'read:graph:deployment:external',
   ExternalPullRequest: 'read:graph:pull-request:external',
   ExternalCommit: 'read:graph:commit:external',
+  ExternalRepository: 'read:graph:repository:external',
 };
 
 export function scopesFor(query: QuerySpec): string[] {

@@ -142,6 +142,38 @@ const build = (id: string, state: string, createdAt: string): ColumnValue => ({
   data: { __typename: 'ExternalBuild', state, createdAt },
 });
 
+const node = (
+  id: string,
+  typename: string,
+  data: Record<string, unknown>,
+): ColumnValue => ({ __typename: 'CypherQueryResultNode', id, data: { __typename: typename, ...data } });
+
+/** A violated decision surfaced as a failing commit status, plus its neighbourhood. */
+export const SANDBOX_ATTRIBUTION_PAGES: Record<string, RowSpec[][]> = {
+  attribution: [
+    [
+      {
+        build: node('ari:cloud:bitbucket::build/77', 'ExternalBuild', {
+          name: 'decision/0031-datastore-monitoring',
+          state: 'FAILED',
+        }),
+        repository: node('ari:cloud:bitbucket::repository/payments', 'ExternalRepository', { name: 'payments' }),
+        workItem: node('ari:cloud:jira::issue/CX-11', 'JiraWorkItem', { summary: 'Checkout build failed' }),
+        pullRequest: node('ari:cloud:bitbucket::pr/42', 'ExternalPullRequest', { title: 'Add monitoring config' }),
+      },
+    ],
+    [
+      {
+        build: node('ari:cloud:bitbucket::build/78', 'ExternalBuild', {
+          name: 'decision/0012-use-postgres-primary',
+          state: 'SUCCESSFUL',
+        }),
+        deployment: node('ari:cloud:bitbucket::deployment/12', 'ExternalDeployment', { state: 'COMPLETED' }),
+      },
+    ],
+  ],
+};
+
 /** A two-page spine, a single-page branch set, and one passing build. */
 export const SANDBOX_PAGES: Record<string, RowSpec[][]> = {
   spine: [
