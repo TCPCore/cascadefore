@@ -109,7 +109,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
-| DAC-040 | Confirm TWG scopes on the demo site; `echo` query | [ ] | 0.5d | DAC-005 |
+| DAC-040 | ~~Confirm TWG scopes~~ **confirmed: 15/15 Teamwork Graph scopes granted on site**; MCP tool call is the test harness (panel not required) | [~] | 0.5d | DAC-005 |
 | DAC-041 | Persisted Cypher: `decision/<id>` status → PR → build → incident | [ ] | 1.5d | DAC-040 |
 | DAC-042 | Verify relationship names in TWG Labs; correct `queries.ts` | [ ] | 0.5d | DAC-041 |
 | DAC-043 | Attribution UI: violated decision → linked downstream events | [ ] | 1d | DAC-041 |
@@ -191,5 +191,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 ## 9. Current snapshot (2 Nov)
 
 **Done:** E0, E1, E2 core (registry/lifecycle/file_match fixture), E3 core (retrieval/patterns/growth), standalone host + decision UI foundation.
-**Unblocked 2 Nov:** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
+**Unblocked 2 Nov (scopes):** all 15 Teamwork Graph scopes + `write:jira-work` + `write:confluence-content` are granted on the site (admin → Connected apps → Authorization). Two consequences: the graph is testable *today*, and Teamwork Graph **connectors are unavailable on this site** ("No connectors available"), so the case base must live in Forge SQL + Confluence — which is already the design.
+
+**Unblocked 2 Nov (UI):** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
 **Next in queue:** DAC-025 (runner CLI) → DAC-026 (commit statuses) → DAC-028 (Confluence mirror) → DAC-034 (case-base SQL).
