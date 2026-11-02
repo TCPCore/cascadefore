@@ -4,7 +4,9 @@ Reconstructs the decision that seeded a failure, scores the paths that were evid
 
 Built for **Codegeist 2026** on Forge + Teamwork Graph.
 
-> 📋 **Scope, tasks and milestones live in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — the single source of truth for what is being built and what is done. Track: **Apps for Software Teams**. Entered for **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, and **Best Marketplace published app**.
+> 📋 **[docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — scope, tasks, milestones, definition of done
+> 🏗 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — how the six parts fit together
+> 🔍 **[docs/JIRA_MOUNT_DIAGNOSIS.md](docs/JIRA_MOUNT_DIAGNOSIS.md)** — why Jira panels are hidden by default Track: **Apps for Software Teams**. Entered for **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, and **Best Marketplace published app**.
 
 > The failure wasn't a bad decision. It was an unconnected graph.
 
@@ -56,6 +58,13 @@ The same evidence, scored against two different intents, produces two different 
 | Two-intent flip | done | pipeline test |
 | Resolver + async consumer + action | done | typecheck; deployed |
 | Custom UI panel | done | `vite build`; served standalone |
+| Decision artifact: parser, 5 test kinds, derived status | done | 20 tests |
+| Runner CLI + fs/http/graph executors + commit statuses | done | 19 + 8 tests |
+| Case base: retrieval, Laplace patterns, growth curve | done | 20 tests |
+| Ledger: portable SQL schema, sqlite sandbox driver | done | 11 tests |
+| Confluence mirror + storage-format round trip + ingest | done | 15 tests |
+| Attribution: `decision/<id>` → build → work item → PR | done | 8 tests |
+| Seeder: plan + idempotent executor | done | 8 tests |
 | `rovo:skill` / `rovo:agent` / `rovo:mcp` manifest + artefacts | done | `forge lint` clean; **not** exercised at runtime |
 | Deployed Forge app | **live** | v2.1.0 production, Runs-on-Atlassian eligible |
 | In-Jira panel rendering | **not yet confirmed** | module not observed mounting; standalone host exists so the product can be reviewed without it |
