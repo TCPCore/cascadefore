@@ -6,7 +6,7 @@ import { getRun, health, isStandalone, startCascade, type Health } from './api';
 import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
-import { Tree } from './components/Tree';
+import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
 type Tab = 'tree' | 'thennow' | 'graft';
@@ -170,7 +170,7 @@ export function App(): JSX.Element {
           <nav className="tabs" aria-label="Views">
             {(
               [
-                ['tree', 'Cascade tree'],
+                ['tree', 'Decision tree'],
                 ['thennow', 'Then vs now'],
                 ['graft', 'Recommended path'],
               ] as const
@@ -185,7 +185,7 @@ export function App(): JSX.Element {
             ))}
           </nav>
 
-          {tab === 'tree' && <Tree snapshot={snapshot} />}
+          {tab === 'tree' && <DecisionExplorer snapshot={snapshot} />}
           {tab === 'thennow' && <ThenNow snapshot={snapshot} />}
           {tab === 'graft' && <Graft snapshot={snapshot} />}
 

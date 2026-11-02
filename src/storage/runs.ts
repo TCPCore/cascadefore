@@ -15,6 +15,7 @@ import type {
   ThenNowRowDto,
   TreeNodeDto,
 } from '../shared/dtos';
+import type { Projection } from '../domain/projection';
 import type { SqlDriver } from './driver';
 import { ensureSchema } from './schema';
 
@@ -64,7 +65,12 @@ export interface SnapshotInput {
   intent: Intent;
   nodes: DecisionNode[];
   spine: SpineSegment[];
-  branches: Array<{ branch: { id: string; nodeId: string; label: string; taken: boolean }; score: BranchScore }>;
+  branches: Array<{
+    branch: { id: string; nodeId: string; label: string; taken: boolean };
+    score: BranchScore;
+    projection?: Projection;
+    consequence?: string[];
+  }>;
   paths: PathCandidate[];
   recommendation: Recommendation | null;
   scopeProbe: ScopeProbeResult[];
@@ -85,13 +91,15 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
     evidenceCount: n.evidence.length,
   }));
 
-  const branches: BranchViewDto[] = input.branches.map(({ branch, score }) => ({
+  const branches: BranchViewDto[] = input.branches.map(({ branch, score, projection, consequence }) => ({
     id: branch.id,
     nodeId: branch.nodeId,
     label: branch.label,
     taken: branch.taken,
     score,
     evidenceArIs: [...score.knowableEvidenceAris, ...score.withheldEvidenceAris],
+    projection: projection ?? null,
+    consequence: consequence ?? [],
   }));
 
   const thenNow: ThenNowRowDto[] = branches.map((b) => ({
@@ -216,7 +224,11 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
         branch.nodeId,
         branch.label.slice(0, 250),
         branch.taken ? 1 : 0,
-        JSON.stringify(branch.score),
+        JSON.stringify({
+          score: branch.score,
+          projection: branch.projection,
+          consequence: branch.consequence,
+        }),
       ],
     });
     statements.push({
@@ -322,7 +334,10 @@ export function hydrate(
   }));
 
   const branches: BranchViewDto[] = branchRows.map((b) => {
-    const score = parseJson<BranchScore>(b.score_json, {
+    const stored = parseJson<
+      | { score: BranchScore; projection?: Projection; consequence?: string[] }
+      | BranchScore
+    >(b.score_json, {
       branchId: b.branch_id,
       knowability: 0,
       viability: 0,
@@ -332,6 +347,10 @@ export function hydrate(
       withheldEvidenceAris: [],
       arithmetic: [],
     });
+    const isWrapper = 'score' in stored;
+    const score = isWrapper ? stored.score : stored;
+    const projection = isWrapper ? (stored.projection ?? null) : null;
+    const consequence = isWrapper ? (stored.consequence ?? []) : [];
     return {
       id: b.branch_id,
       nodeId: b.node_id,
@@ -339,6 +358,8 @@ export function hydrate(
       taken: Boolean(b.taken),
       score,
       evidenceArIs: [...score.knowableEvidenceAris, ...score.withheldEvidenceAris],
+      projection,
+      consequence,
     };
   });
 

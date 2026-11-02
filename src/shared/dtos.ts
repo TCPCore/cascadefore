@@ -1,3 +1,4 @@
+import type { Projection } from '../domain/projection';
 import type {
   Branch,
   BranchScore,
@@ -27,6 +28,10 @@ export interface BranchViewDto {
   taken: boolean;
   score: BranchScore;
   evidenceArIs: string[];
+  /** What happens if this branch is taken. Evidence + arithmetic only. */
+  projection: Projection | null;
+  /** Plain-language forward consequences: what survives, what is undone, cost. */
+  consequence: string[];
 }
 
 export interface ThenNowRowDto {

@@ -13,6 +13,7 @@ import { assemble, type RawArtifact } from '../graph/extract';
 import { scoreBranches } from '../domain/scoring';
 import { buildPaths, decide, rankPaths } from '../domain/graft';
 import { buildSnapshot } from '../storage/runs';
+import { describeConsequence, projectBranch } from '../domain/projection';
 
 export interface GraphCollection {
   artifacts: RawArtifact[];
@@ -134,7 +135,19 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
   const recommendation = decide(ranked, assembly.branches, assembly.spine, intent);
   const scoringMs = Date.now() - scoringStart;
 
-  const paired = pairScores(assembly.branches, scores);
+  const nodeById = new Map(assembly.nodes.map((n) => [n.id, n]));
+  const titles: Record<string, string> = {};
+  for (const segment of assembly.spine) titles[segment.nodeId] = segment.title;
+
+  const paired = pairScores(assembly.branches, scores).map(({ branch, score }) => {
+    const node = nodeById.get(branch.nodeId);
+    return {
+      branch,
+      score,
+      ...(node ? { projection: projectBranch(branch, node, assembly.spine, score) } : {}),
+      consequence: describeConsequence(branch, assembly.spine, titles),
+    };
+  });
 
   const snapshot = buildSnapshot({
     runId: input.runId,
