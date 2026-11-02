@@ -2,6 +2,7 @@ import type {
   Branch,
   BranchScore,
   DecisionNode,
+  EvidenceSource,
   Horizon,
   Intent,
   Iso,
@@ -21,6 +22,12 @@ export interface GraphCollection {
   scopeProbe: ScopeProbeResult[];
   errorCode: string | null;
   traversalMs: number;
+  /**
+   * Provenance is declared by the source, never by configuration. An override
+   * that wins regardless of the source is how a fixture gets labelled as a real
+   * thread — plausible output, silently wrong.
+   */
+  evidenceSource: EvidenceSource;
 }
 
 export interface GraphSource {
@@ -29,6 +36,7 @@ export interface GraphSource {
 
 export interface PipelineInput {
   runId: string;
+  evidenceSource?: EvidenceSource;
   /** What the graph is anchored around. Defaults to a build failure. */
   eventKind?: EventKind;
   event?: EventContext;
@@ -65,6 +73,7 @@ function pairScores(branches: readonly Branch[], scores: readonly BranchScore[])
 function emptySnapshot(
   input: PipelineInput,
   event: EventContext,
+  evidenceSource: EvidenceSource,
   intent: Intent,
   collection: GraphCollection,
   status: RunSnapshotDto['status'],
@@ -74,6 +83,7 @@ function emptySnapshot(
   return buildSnapshot({
     runId: input.runId,
     event,
+    evidenceSource,
     workItemKey: input.workItemKey,
     workItemAri: `ari:cloud:jira::issue/${input.workItemKey}`,
     failureAt: input.failureAt,
@@ -120,10 +130,11 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
   await deps.onStage?.('traversing');
   const collection = await deps.source.collect(input.workItemKey);
+  const evidenceSource: EvidenceSource = collection.evidenceSource;
 
   if (collection.errorCode) {
     return {
-      snapshot: emptySnapshot(input, event, intent, collection, 'failed', collection.errorCode, 0),
+      snapshot: emptySnapshot(input, event, evidenceSource, intent, collection, 'failed', collection.errorCode, 0),
       nodes: [],
     };
   }
@@ -133,7 +144,7 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
   if (assembly.nodes.length === 0) {
     return {
-      snapshot: emptySnapshot(input, event, intent, collection, 'empty', null, 0),
+      snapshot: emptySnapshot(input, event, evidenceSource, intent, collection, 'empty', null, 0),
       nodes: [],
     };
   }
@@ -166,6 +177,7 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
   const snapshot = buildSnapshot({
     runId: input.runId,
     event,
+    evidenceSource,
     workItemKey: input.workItemKey,
     workItemAri: `ari:cloud:jira::issue/${input.workItemKey}`,
     failureAt: input.failureAt,

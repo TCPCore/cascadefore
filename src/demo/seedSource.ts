@@ -87,6 +87,7 @@ export function createDemoSource(): GraphSource {
         scopeProbe: [],
         errorCode: null,
         traversalMs: 42,
+        evidenceSource: 'seeded_fixture',
       };
     },
   };

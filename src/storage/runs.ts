@@ -16,6 +16,7 @@ import type {
   TreeNodeDto,
 } from '../shared/dtos';
 import type { Projection } from '../domain/projection';
+import type { EvidenceSource } from '../shared/types';
 import type { EventContext } from '../domain/events';
 import type { SqlDriver } from './driver';
 import { ensureSchema } from './schema';
@@ -59,6 +60,7 @@ function parseJson<T>(value: unknown, fallback: T): T {
 export interface SnapshotInput {
   runId: string;
   event: EventContext;
+  evidenceSource: EvidenceSource;
   workItemKey: string;
   workItemAri: string;
   failureAt: string;
@@ -117,6 +119,7 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
   return {
     runId: input.runId,
     event: input.event,
+    evidenceSource: input.evidenceSource,
     workItemKey: input.workItemKey,
     failureAt: input.failureAt,
     status: input.status,
@@ -151,13 +154,15 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
 
   statements.push({
     text: `INSERT INTO cascade_runs
-      (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, intent_json, intent_source,
-       spine_json, recommendation_json, stats_json, scope_probe_json, dossier_url, error_code, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, evidence_source,
+       intent_json, intent_source, spine_json, recommendation_json, stats_json, scope_probe_json,
+       dossier_url, error_code, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         status = VALUES(status),
         stage = VALUES(stage),
         event_json = VALUES(event_json),
+        evidence_source = VALUES(evidence_source),
         intent_json = VALUES(intent_json),
         intent_source = VALUES(intent_source),
         spine_json = VALUES(spine_json),
@@ -175,6 +180,7 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
       snapshot.status,
       snapshot.stage,
       JSON.stringify(snapshot.event),
+      snapshot.evidenceSource,
       JSON.stringify(snapshot.intent),
       snapshot.intent.source,
       JSON.stringify(snapshot.spine),
@@ -273,6 +279,7 @@ export interface RunRow {
   run_id: string;
   work_item_key: string;
   event_json?: unknown;
+  evidence_source?: string | null;
   failure_at: unknown;
   status: string;
   stage: string;
@@ -394,6 +401,7 @@ export function hydrate(
 
   return {
     runId: run.run_id,
+    evidenceSource: (run.evidence_source as EvidenceSource) ?? 'seeded_fixture',
     event: parseJson<EventContext>(run.event_json, {
       kind: 'build-failure',
       subjectKey: run.work_item_key,

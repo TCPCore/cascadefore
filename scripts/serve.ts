@@ -192,7 +192,17 @@ async function handleRun(req: IncomingMessage, res: ServerResponse): Promise<voi
 
   try {
     const result = await runPipeline(
-      { runId, workItemKey, eventKind, intentText, horizon, failureAt: createdAt, createdAt },
+      {
+        runId,
+        workItemKey,
+        evidenceSource:
+          SOURCE === 'live' ? 'real_confluence_thread' : SOURCE === 'recorded' ? 'recorded_graph' : 'seeded_fixture',
+        eventKind,
+        intentText,
+        horizon,
+        failureAt: createdAt,
+        createdAt,
+      },
       {
         source: buildSource(),
         parseIntent: async (text, h) => parseIntentLocally(text, h),

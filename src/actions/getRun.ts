@@ -24,6 +24,7 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
   return {
     runId: snapshot.runId,
     status: snapshot.status,
+    evidenceSource: snapshot.evidenceSource,
     event: snapshot.event,
     intent: snapshot.intent,
     stats: snapshot.stats,

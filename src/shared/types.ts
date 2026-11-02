@@ -102,6 +102,15 @@ export interface BranchScore {
 
 export type Horizon = 'weeks' | 'quarters' | 'years';
 
+/**
+ * Where the evidence behind a reconstruction came from.
+ *
+ * Stamped on every run so a consumer can tell a reconstruction of a real thread
+ * from a seeded fixture without reading the source. A demo that cannot be
+ * distinguished from a fixture is a demo that has to be taken on faith.
+ */
+export type EvidenceSource = 'real_confluence_thread' | 'seeded_fixture' | 'graph' | 'recorded_graph';
+
 export interface Intent {
   goal: string;
   successCriteria: string[];

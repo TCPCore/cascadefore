@@ -87,7 +87,13 @@ describe('pipeline end to end (seeded graph)', () => {
   it('reports empty (not failed) when the graph yields nothing', async () => {
     const empty: GraphSource = {
       async collect() {
-        return { artifacts: [], scopeProbe: [{ objectType: 'ConfluencePage', scope: 'read:graph:page:confluence', yielded: false }], errorCode: null, traversalMs: 5 };
+        return {
+          artifacts: [],
+          scopeProbe: [{ objectType: 'ConfluencePage', scope: 'read:graph:page:confluence', yielded: false }],
+          errorCode: null,
+          traversalMs: 5,
+          evidenceSource: 'graph',
+        };
       },
     };
     const { snapshot } = await runPipeline(input('Restore the build this week', 'weeks'), {
@@ -101,7 +107,13 @@ describe('pipeline end to end (seeded graph)', () => {
   it('reports failed when the graph returns an error code', async () => {
     const failing: GraphSource = {
       async collect() {
-        return { artifacts: [], scopeProbe: [], errorCode: 'FEATURE_UNAVAILABLE', traversalMs: 3 };
+        return {
+          artifacts: [],
+          scopeProbe: [],
+          errorCode: 'FEATURE_UNAVAILABLE',
+          traversalMs: 3,
+          evidenceSource: 'graph',
+        };
       },
     };
     const { snapshot } = await runPipeline(input('Restore the build this week', 'weeks'), deps(failing));
@@ -151,5 +163,31 @@ describe('pipeline against recorded live graph data', () => {
     expect(taken?.label).toMatch(/Yes, for now/i);
 
     expect(LIVE_ARTIFACTS.length).toBe(5);
+  });
+});
+
+describe('evidence provenance', () => {
+  it('is declared by the source, not by the caller', async () => {
+    const { createLiveGraphSource } = await import('../src/demo/liveGraph');
+    const { snapshot } = await runPipeline(input('restore the build this week', 'weeks'), {
+      source: createLiveGraphSource(),
+      parseIntent: async (text, horizon) => parseIntentLocally(text, horizon),
+      now: () => NOW,
+    });
+    expect(snapshot.evidenceSource).toBe('real_confluence_thread');
+  });
+
+  it('marks the seeded fixture as a fixture', async () => {
+    const { snapshot } = await runPipeline(input('restore the build this week', 'weeks'), deps());
+    expect(snapshot.evidenceSource).toBe('seeded_fixture');
+  });
+
+  it('ignores a caller-supplied evidenceSource', async () => {
+    const { snapshot } = await runPipeline(
+      { ...input('restore the build this week', 'weeks'), evidenceSource: 'real_confluence_thread' },
+      deps(),
+    );
+    // The source wins: a fixture cannot be relabelled by configuration.
+    expect(snapshot.evidenceSource).toBe('seeded_fixture');
   });
 });

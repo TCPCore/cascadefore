@@ -231,6 +231,7 @@ export function createGraphSource(
           scopeProbe: await probeScopes(caller, options.probeTypes ?? [], workItemKey),
           errorCode: spine.errorCode,
           traversalMs: Date.now() - started,
+          evidenceSource: 'graph',
         };
       }
 
@@ -257,6 +258,7 @@ export function createGraphSource(
         scopeProbe,
         errorCode: branches.errorCode ?? outcomes.errorCode,
         traversalMs: Date.now() - started,
+        evidenceSource: 'graph',
       };
     },
   };

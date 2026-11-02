@@ -2,7 +2,9 @@ import { buildDeps, isDemoMode, repository } from '../bootstrap';
 import { loadConfig, assertConfigured } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
-import type { Horizon } from '../shared/types';
+import type { EvidenceSource, Horizon } from '../shared/types';
+
+const EVIDENCE_SOURCES: EvidenceSource[] = ['real_confluence_thread', 'seeded_fixture', 'graph', 'recorded_graph'];
 
 interface ActionInput {
   workItemKey?: string;
@@ -28,9 +30,20 @@ export async function runCascadeAction(event: unknown): Promise<{ summary: strin
   if (!isDemoMode()) assertConfigured(config);
   const runId = newRunId();
   const createdAt = new Date().toISOString();
+  // Provenance is explicit, never inferred from behaviour: a caller must be able
+  // to tell a real-thread reconstruction from a fixture without reading source.
+  const configured = process.env.CASCADE_EVIDENCE_SOURCE as EvidenceSource | undefined;
+  const evidenceSource: EvidenceSource =
+    configured && EVIDENCE_SOURCES.includes(configured)
+      ? configured
+      : isDemoMode()
+        ? 'seeded_fixture'
+        : 'graph';
+
   const result = await runPipeline(
     {
       runId,
+      evidenceSource,
       workItemKey,
       intentText: input.intent,
       horizon: input.horizon,

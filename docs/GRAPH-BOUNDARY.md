@@ -123,3 +123,33 @@ empty": a failure mode wearing another failure mode's clothes.
 
 **Response:** the extractor now asserts distinctness of branch labels in a test,
 rather than hoping for it. Plausible output is not evidence; an assertion is.
+
+---
+
+## Fifth instance: provenance that lied
+
+`evidenceSource` was first implemented as an environment override. In development
+it reported `real_confluence_thread` while the run was actually using the seeded
+fixture — the env var won regardless of the source.
+
+That is the same class again: **plausible output, silently wrong.** A provenance
+field that can be set independently of the thing it describes is worse than no
+provenance at all, because it is exactly the claim a reader would trust.
+
+The fix is structural, not a guard: `GraphCollection` now carries
+`evidenceSource`, so **the source declares what it is** and no caller can relabel
+it. A test asserts that a caller-supplied value is ignored
+
+```ts
+it('ignores a caller-supplied evidenceSource', …)  // fixture stays a fixture
+```
+
+Five instances now, all caught by an assertion rather than by reading output:
+
+| # | Assumption | Plausible output | Caught by |
+|---|---|---|---|
+| 1 | label is `JiraWorkItem` | query runs | execution |
+| 2 | properties are filterable | rows return | execution |
+| 3 | unknown rels return empty | query "succeeds" | execution |
+| 4 | comment name is identity | three threads | label distinctness test |
+| 5 | provenance can be configured | "real thread" on a fixture | source-declares test |

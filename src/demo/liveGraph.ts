@@ -86,7 +86,13 @@ export const LIVE_ARTIFACTS: RawArtifact[] = [
 export function createLiveGraphSource(): GraphSource {
   return {
     async collect(): Promise<GraphCollection> {
-      return { artifacts: LIVE_ARTIFACTS, scopeProbe: [], errorCode: null, traversalMs: 61 };
+      return {
+        artifacts: LIVE_ARTIFACTS,
+        scopeProbe: [],
+        errorCode: null,
+        traversalMs: 61,
+        evidenceSource: 'real_confluence_thread',
+      };
     },
   };
 }

@@ -10,6 +10,7 @@ export const DDL: string[] = [
     status VARCHAR(24) NOT NULL,
     stage VARCHAR(24) NOT NULL,
     event_json JSON,
+    evidence_source VARCHAR(32),
     intent_json JSON,
     intent_source VARCHAR(24),
     spine_json JSON,
@@ -73,6 +74,7 @@ export const DDL: string[] = [
  */
 export const COLUMN_MIGRATIONS: string[] = [
   `ALTER TABLE cascade_runs ADD COLUMN event_json JSON`,
+  `ALTER TABLE cascade_runs ADD COLUMN evidence_source VARCHAR(32)`,
 ];
 
 /**
