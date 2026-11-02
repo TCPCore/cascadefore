@@ -85,7 +85,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | DAC-025 | **decisions-runner** CLI (`scripts/run-decisions.ts`): glob `.decisions/`, run, report | [x] | 1.5d | DAC-021 |
 | DAC-026 | Emit Bitbucket commit status `decision/<id>` from the runner | [x] | 0.5d | DAC-025 |
 | DAC-027 | `bitbucket-pipelines.yml` step wiring the runner | [x] | 0.5d | DAC-026 |
-| DAC-028 | Confluence mirror: page renderer, idempotent sync, storage-format round trip (**REST adapter pending**) | [~] | 1d | DAC-025 |
+| DAC-028 | Confluence mirror: renderer, idempotent sync, storage round trip, REST adapter (unverified live) | [x] | 1d | DAC-025 |
 | DAC-029 | Runner unit + e2e tests against a fixture repo | [x] | 1d | DAC-025 |
 
 **Gate E2:** push to a fixture repo → commit statuses appear → Confluence shows the decision record. (Screenshot.)
@@ -139,7 +139,7 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
-| DAC-060 | Seeder: plan + idempotent executor for ADR pages, issue, comment (**REST client pending**) | [~] | 1.5d | DAC-005 |
+| DAC-060 | Seeder: plan + idempotent executor + Forge client (unverified live) | [x] | 1.5d | DAC-005 |
 | DAC-061 | Video script (retrieve → pattern → grow → attribute) | [ ] | 1d | all gates |
 | DAC-062 | Record + edit 3-min video, captions, 1080p | [ ] | 2d | DAC-061 |
 | DAC-063 | Submission writeup mapping rubric to video timestamps | [ ] | 0.5d | DAC-062 |
