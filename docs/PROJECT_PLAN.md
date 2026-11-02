@@ -140,9 +140,9 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 | ID | Task | Status | Effort | Deps |
 |---|---|---|---|---|
 | DAC-060 | Seeder: plan + idempotent executor + Forge client (unverified live) | [x] | 1.5d | DAC-005 |
-| DAC-061 | Video script (retrieve → pattern → grow → attribute) | [ ] | 1d | all gates |
+| DAC-061 | Video script (retrieve → pattern → grow → attribute) | [x] | 1d | all gates |
 | DAC-062 | Record + edit 3-min video, captions, 1080p | [ ] | 2d | DAC-061 |
-| DAC-063 | Submission writeup mapping rubric to video timestamps | [ ] | 0.5d | DAC-062 |
+| DAC-063 | Submission writeup mapping rubric to video timestamps | [x] | 0.5d | DAC-062 |
 | DAC-064 | Install-link app identity (`cascade-demo`) + distribution "Sharing" | [ ] | 0.5d | DAC-005 |
 | DAC-065 | Marketplace listing identity (`cascade-mkt`) + review ticket | [ ] | 1d | DAC-064 |
 | DAC-066 | Fresh-site install runbook validated by a stranger | [ ] | 0.5d | DAC-060 |
