@@ -6,6 +6,46 @@ before you save, so a validation error here is exactly what we need to see.
 
 Do them in order and stop at the first failure — each one builds on the last.
 
+
+---
+
+## Step 0 — probes (run these first, in order)
+
+A generic *"There was an issue running this query"* almost always means the query
+parsed but failed at execution — unbound parameters (`$workItemKey`, `$limit`),
+or a relationship/property that does not exist. These probes separate those.
+
+**P1 — is there data at all?**
+
+```cypher
+MATCH (item:JiraWorkItem) RETURN item.key AS key LIMIT 5
+```
+
+**P2 — does a literal filter work?** (no parameters involved)
+
+```cypher
+MATCH (item:JiraWorkItem) WHERE item.key = 'CX-11' RETURN item.key AS key, item.summary AS summary
+```
+
+**P3 — the important one: what relationships actually exist?**
+
+```cypher
+MATCH (n:JiraWorkItem {key: 'CX-11'})-[r]-(m) RETURN type(r) AS rel, labels(m) AS target LIMIT 25
+```
+
+P3's output is the thing I cannot guess. It names the real relationship types and
+target labels, which is what every query in this file depends on.
+
+If `type()` / `labels()` are unsupported, try:
+
+```cypher
+MATCH (n:JiraWorkItem {key: 'CX-11'})-[r]->(m) RETURN r, m LIMIT 25
+```
+
+---
+
+## Step 1 — the full queries
+
 ## 1. spine — cascade-spine
 
 Causal spine: failing work item → linked docs → comments → sibling work items
