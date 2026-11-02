@@ -1,18 +1,25 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+/**
+ * Two builds from one source:
+ *   npm run build      -> static/panel/build       (Forge Custom UI, inside Jira)
+ *   npm run build:web  -> static/panel/build-web   (standalone host, plain browser)
+ */
+const standalone = process.env.VITE_STANDALONE === 'true';
+
 export default defineConfig({
   plugins: [react()],
   base: './',
+  define: {
+    __STANDALONE__: JSON.stringify(standalone),
+  },
   build: {
-    outDir: 'build',
+    outDir: standalone ? 'build-web' : 'build',
     emptyOutDir: true,
     sourcemap: false,
   },
   server: {
-    fs: {
-      // The panel imports shared DTO types from the app root.
-      allow: ['..', '../..', '../../..'],
-    },
+    fs: { allow: ['..', '../..', '../../..'] },
   },
 });

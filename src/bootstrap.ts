@@ -2,15 +2,15 @@ import api from '@forge/api';
 import { Queue } from '@forge/events';
 import { chat } from '@forge/llm';
 
-import { loadConfig, type AppConfig } from './config.js';
-import type { ChatFn } from './llm/intentParser.js';
-import { parseIntent } from './llm/intentParser.js';
-import type { GraphCaller, GraphResponse } from './graph/client.js';
-import { createGraphSource } from './graph/source.js';
-import { createDemoSource } from './demo/seedSource.js';
-import type { GraphSource, PipelineDeps } from './pipeline/run.js';
-import { forgeSqlDriver } from './storage/forgeDriver.js';
-import { RunRepository } from './storage/runs.js';
+import { loadConfig, type AppConfig } from './config';
+import type { ChatFn } from './llm/intentParser';
+import { parseIntent } from './llm/intentParser';
+import type { GraphCaller, GraphResponse } from './graph/client';
+import { createGraphSource } from './graph/source';
+import { createDemoSource } from './demo/seedSource';
+import type { GraphSource, PipelineDeps } from './pipeline/run';
+import { forgeSqlDriver } from './storage/forgeDriver';
+import { RunRepository } from './storage/runs';
 
 export const QUEUE_KEY = 'cascade-jobs';
 

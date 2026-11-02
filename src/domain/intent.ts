@@ -1,6 +1,6 @@
-import type { Horizon, Intent, IntentFitBreakdown, PathFacts } from '../shared/types.js';
-import { INTENT_WEIGHTS } from './constants.js';
-import { clamp01 } from './math.js';
+import type { Horizon, Intent, IntentFitBreakdown, PathFacts } from '../shared/types';
+import { INTENT_WEIGHTS } from './constants';
+import { clamp01 } from './math';
 
 export const DEFAULT_INTENT: Intent = {
   goal: 'Restore the build and reduce the chance of repeating this failure',

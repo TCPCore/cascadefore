@@ -1,9 +1,9 @@
-import type { ScopeProbeResult, Iso } from '../shared/types.js';
-import { SCOPE_FOR_OBJECT_TYPE } from './queries.js';
-import type { RawArtifact } from './extract.js';
-import type { GraphCaller, RawRow } from './client.js';
-import { buildRawCypherDocument, runPersistedQuery } from './client.js';
-import type { GraphCollection, GraphSource } from '../pipeline/run.js';
+import type { ScopeProbeResult, Iso } from '../shared/types';
+import { SCOPE_FOR_OBJECT_TYPE } from './queries';
+import type { RawArtifact } from './extract';
+import type { GraphCaller, RawRow } from './client';
+import { buildRawCypherDocument, runPersistedQuery } from './client';
+import type { GraphCollection, GraphSource } from '../pipeline/run';
 
 export interface QueryKeys {
   spine: string;

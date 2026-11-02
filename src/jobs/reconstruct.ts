@@ -1,8 +1,8 @@
 import type { AsyncEvent } from '@forge/events';
-import { buildDeps, isDemoMode, repository } from '../bootstrap.js';
-import { loadConfig } from '../config.js';
-import { runPipeline } from '../pipeline/run.js';
-import type { Horizon } from '../shared/types.js';
+import { buildDeps, isDemoMode, repository } from '../bootstrap';
+import { loadConfig } from '../config';
+import { runPipeline } from '../pipeline/run';
+import type { Horizon } from '../shared/types';
 
 export interface ReconstructJobBody extends Record<string, unknown> {
   runId: string;

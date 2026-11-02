@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { independenceDiscounts, scoreBranch, scoreBranches } from '../src/domain/scoring.js';
-import { branchShard, branchTaken, branchWithheld, branches, nodeAdr, nodes } from './fixtures/scenario.js';
+import { independenceDiscounts, scoreBranch, scoreBranches } from '../src/domain/scoring';
+import { branchShard, branchTaken, branchWithheld, branches, nodeAdr, nodes } from './fixtures/scenario';
 
 describe('independence discount', () => {
   it('discounts repeated evidence from the same key', () => {

@@ -1,4 +1,4 @@
-import { QUERY_CATALOG } from './graph/queries.js';
+import { QUERY_CATALOG } from './graph/queries';
 
 /**
  * Runtime configuration.

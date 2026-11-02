@@ -1,6 +1,6 @@
-import type { Evidence, Iso } from '../shared/types.js';
-import { RECENCY_FLOOR, RECENCY_HALF_LIFE_DAYS } from './constants.js';
-import { clamp } from './math.js';
+import type { Evidence, Iso } from '../shared/types';
+import { RECENCY_FLOOR, RECENCY_HALF_LIFE_DAYS } from './constants';
+import { clamp } from './math';
 
 const DAY_MS = 86_400_000;
 

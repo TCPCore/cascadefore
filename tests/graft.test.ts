@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildGraft, buildPaths, decide, rankPaths } from '../src/domain/graft.js';
-import { DEFAULT_INTENT } from '../src/domain/intent.js';
-import type { Intent } from '../src/shared/types.js';
-import { NOW, branchShard, branchTaken, branches, nodeAdr, nodeTransition, nodes, spine } from './fixtures/scenario.js';
+import { buildGraft, buildPaths, decide, rankPaths } from '../src/domain/graft';
+import { DEFAULT_INTENT } from '../src/domain/intent';
+import type { Intent } from '../src/shared/types';
+import { NOW, branchShard, branchTaken, branches, nodeAdr, nodeTransition, nodes, spine } from './fixtures/scenario';
 
 const weeksIntent: Intent = { ...DEFAULT_INTENT, goal: 'restore service this week', horizon: 'weeks', source: 'user' };
 const yearsIntent: Intent = {

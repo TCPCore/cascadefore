@@ -1,5 +1,5 @@
 import { sql } from '@forge/sql';
-import type { SqlDriver } from './driver.js';
+import type { SqlDriver } from './driver';
 
 interface SqlResult<Row> {
   rows: Row[];

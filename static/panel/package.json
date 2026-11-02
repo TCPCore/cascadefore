@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "build:web": "VITE_STANDALONE=true vite build",
     "dev": "vite"
   },
   "dependencies": {

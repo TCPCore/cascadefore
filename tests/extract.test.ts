@@ -5,9 +5,9 @@ import {
   synthesizeImplicitNode,
   toEvidence,
   type RawArtifact,
-} from '../src/graph/extract.js';
-import { IMPLICIT_CONFIDENCE_CAP } from '../src/domain/constants.js';
-import { ev } from './fixtures/scenario.js';
+} from '../src/graph/extract';
+import { IMPLICIT_CONFIDENCE_CAP } from '../src/domain/constants';
+import { ev } from './fixtures/scenario';
 
 function artifact(overrides: Partial<RawArtifact>): RawArtifact {
   return {

@@ -1,6 +1,6 @@
 import api, { route } from '@forge/api';
 
-import { QUERY_CATALOG, scopesFor, type QuerySpec } from './queries.js';
+import { QUERY_CATALOG, scopesFor, type QuerySpec } from './queries';
 
 /**
  * Registers every persisted Cypher query against this app and returns the keys.

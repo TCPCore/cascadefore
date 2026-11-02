@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Cascade — offline report</title>
+<style>:root {
+  --n0: #ffffff;
+  --n10: #f7f8f9;
+  --n20: #ebecf0;
+  --n40: #dfe1e6;
+  --n200: #6b778c;
+  --n500: #42526e;
+  --n900: #172b4d;
+  --blue: #0052cc;
+  --blue-soft: #deebff;
+  --green: #006644;
+  --green-soft: #e3fcef;
+  --amber: #974f0c;
+  --amber-soft: #fffae6;
+  --red: #bf2600;
+  --red-soft: #ffebe6;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(9, 30, 66, 0.12), 0 0 1px rgba(9, 30, 66, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--n10);
+  color: var(--n900);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.panel {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.panel__head h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.panel__issue {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-radius: 4px;
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+.muted {
+  color: var(--n200);
+  margin: 0;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.badge--demo {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.badge--warn {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.card {
+  background: var(--n0);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card--warn {
+  border-left: 4px solid #ffab00;
+}
+
+.card--error {
+  border-left: 4px solid var(--red);
+  color: var(--red);
+}
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card__head h2 {
+  margin: 0;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--n500);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--n500);
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+textarea,
+select {
+  font: inherit;
+  font-weight: 400;
+  color: var(--n900);
+  background: var(--n0);
+  border: 1px solid var(--n40);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+textarea:focus,
+select:focus,
+.btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--blue);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  background: var(--n40);
+  color: var(--n200);
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--n200);
+}
+
+.hint code,
+.node__meta code,
+.probe code {
+  background: var(--n20);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 11px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  background: var(--n0);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat__value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--n200);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--n40);
+}
+
+.tab {
+  font: inherit;
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--n200);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.tab--active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.spine {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spine__item {
+  position: relative;
+  padding-left: 18px;
+}
+
+.spine__item::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: -14px;
+  width: 2px;
+  background: var(--n40);
+}
+
+.spine__item:last-child::before {
+  bottom: auto;
+  height: 8px;
+}
+
+.node {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.node__order {
+  position: absolute;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 3px var(--n0);
+  color: transparent;
+  font-size: 0;
+  z-index: 1;
+}
+
+.node--unresolved .node__order {
+  background: #ffab00;
+}
+
+.node__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.node__meta {
+  margin: 2px 0 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--n200);
+}
+
+.branches {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.branch {
+  border: 1px solid var(--n20);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--n10);
+}
+
+.branch--taken {
+  border-left: 3px solid var(--n500);
+}
+
+.branch__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.pill {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.pill--taken {
+  background: var(--n20);
+  color: var(--n500);
+}
+
+.pill--alt {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.gap {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.gap--high {
+  color: var(--green);
+}
+
+.gap--mid {
+  color: var(--amber);
+}
+
+.gap--low {
+  color: var(--n200);
+}
+
+.branch__label {
+  margin: 4px 0 2px;
+  font-weight: 500;
+}
+
+.branch__scores {
+  margin: 0;
+  font-size: 11px;
+  color: var(--n200);
+  font-variant-numeric: tabular-nums;
+}
+
+.branch__math {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.branch__math summary {
+  cursor: pointer;
+  color: var(--blue);
+}
+
+.branch__math table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+}
+
+.branch__math th,
+.branch__math td {
+  text-align: left;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--n20);
+  font-weight: 400;
+  vertical-align: top;
+}
+
+.branch__math th {
+  white-space: nowrap;
+  color: var(--n500);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.thennow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+}
+
+.thennow__col--head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--n200);
+  border-bottom: 1px solid var(--n40);
+  padding-bottom: 4px;
+}
+
+.thennow__pair {
+  display: contents;
+}
+
+.meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--n20);
+  overflow: hidden;
+}
+
+.meter__fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.meter__fill--then {
+  background: var(--n200);
+}
+
+.meter__fill--now {
+  background: var(--blue);
+}
+
+.meter__label {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--n200);
+  font-variant-numeric: tabular-nums;
+}
+
+.thennow__branch,
+.thennow__gap {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.thennow__gap {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lane {
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--n10);
+  border-top: 3px solid var(--n40);
+}
+
+.lane h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lane ul {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.lane--keep {
+  border-top-color: var(--n200);
+}
+
+.lane--graft {
+  border-top-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.lane--unwind {
+  border-top-color: #ffab00;
+  background: var(--amber-soft);
+}
+
+.lane__count {
+  font-size: 11px;
+  background: rgba(9, 30, 66, 0.08);
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 4px;
+}
+
+.verdict {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.lead {
+  margin: 0;
+}
+
+.score {
+  font-weight: 700;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.alternates {
+  font-size: 12px;
+}
+
+.alternates summary {
+  cursor: pointer;
+  color: var(--blue);
+}
+
+.probe {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.probe th,
+.probe td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--n20);
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  gap: 12px;
+}
+
+.foot a {
+  color: var(--blue);
+}
+
+@media (max-width: 760px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lanes,
+  .thennow {
+    grid-template-columns: 1fr;
+  }
+
+  .thennow__col--head {
+    display: none;
+  }
+}
+
+  body { padding: 24px; }
+  .run { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+  .run__title { font-size: 20px; margin: 0; }
+  .run__intent { margin: 0; color: #6b778c; }
+  .flip { background: #0b1220; color: #fff; padding: 16px 18px; border-radius: 10px; }
+  .flip code { background: rgba(255,255,255,.12); padding: 2px 6px; border-radius: 4px; }
+</style></head>
+<body>
+  <div class="panel">
+    <header class="panel__head">
+      <div>
+        <h1>Cascade <span class="panel__issue">CX-11</span></h1>
+        <p class="muted">Offline render of the real engine against the seeded graph. No Forge, no Jira.</p>
+      </div>
+    </header>
+
+    <div class="flip">
+      <strong>The same evidence, two intents:</strong>
+      week horizon recommends <code>RFC: event-sourced billing ledger</code>;
+      year horizon recommends <code>ADR-003: region-scoped single tenant schema</code>.
+    </div>
+
+    
+  <div class="run">
+    <h2 class="run__title">Run 1 — restore service this week</h2>
+    <p class="run__intent">Intent: <em>Restore the build this week without adding a new dependency #no-new-dependency</em> · horizon <strong>weeks</strong></p>
+    <div class="stats">
+      <div class="stat"><span class="stat__value">4</span><span class="stat__label">decisions</span></div>
+      <div class="stat"><span class="stat__value">4</span><span class="stat__label">branches</span></div>
+      <div class="stat"><span class="stat__value">6</span><span class="stat__label">evidence</span></div>
+      <div class="stat"><span class="stat__value">42</span><span class="stat__label">graph ms</span></div>
+      <div class="stat"><span class="stat__value">2</span><span class="stat__label">score ms</span></div>
+    </div>
+    
+  <section class="card">
+    <header class="card__head"><h2>Recommended path</h2><span class="score">score 0.25</span></header>
+    <p class="verdict">RFC: event-sourced billing ledger</p>
+    <div class="lanes">
+      <div class="lane lane--keep"><h3>Keep <span class="lane__count">1</span></h3>
+        <ul><li>RFC: event-sourced billing ledger</li></ul></div>
+      <div class="lane lane--graft"><h3>Graft <span class="lane__count">1</span></h3><p>RFC: event-sourced billing ledger</p></div>
+      <div class="lane lane--unwind"><h3>Unwind <span class="lane__count">0</span></h3>
+        <ul><li class="muted">Nothing to unwind</li></ul></div>
+    </div>
+  </section>
+    
+  <section class="card">
+    <header class="card__head"><h2>Decision cascade</h2><span class="muted">4 decisions on the spine</span></header>
+    <ol class="spine">
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">1</span>
+          <div class="node__body">
+            <p class="node__title">RFC: event-sourced billing ledger</p>
+            <p class="node__meta"><code>THREAD-ledger</code><span>·</span><span>2026-07-01</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch branch--taken">
+          <div class="branch__top">
+            <span class="pill pill--taken">taken</span>
+            <span class="gap gap--low">gap -0.63</span>
+            <span class="muted">1 evidence</span>
+          </div>
+          <p class="branch__label">RFC: event-sourced billing ledger</p>
+          <p class="branch__scores">knowable 0.90 · viable 0.27 · confidence 0.27</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 1 objects predate 2026-07-01</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 1 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>0 object(s) built or deployed elsewhere</td><td class="num">0.000</td></tr><tr><th scope="row">Outcome signal</th><td>0 passed · 0 failed · 1 unknown</td><td class="num">0.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">0.270</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">-0.630</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">2</span>
+          <div class="node__body">
+            <p class="node__title">ADR-014: keep the billing schema unsharded</p>
+            <p class="node__meta"><code>ADR-014</code><span>·</span><span>2026-03-12</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch branch--taken">
+          <div class="branch__top">
+            <span class="pill pill--taken">taken</span>
+            <span class="gap gap--low">gap -0.63</span>
+            <span class="muted">1 evidence</span>
+          </div>
+          <p class="branch__label">ADR-014: keep the billing schema unsharded</p>
+          <p class="branch__scores">knowable 0.90 · viable 0.27 · confidence 0.27</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 1 objects predate 2026-03-12</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 1 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>0 object(s) built or deployed elsewhere</td><td class="num">0.000</td></tr><tr><th scope="row">Outcome signal</th><td>0 passed · 0 failed · 1 unknown</td><td class="num">0.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">0.270</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">-0.630</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">3</span>
+          <div class="node__body">
+            <p class="node__title">Design doc: sharded billing schema</p>
+            <p class="node__meta"><code>DESIGN-shard</code><span>·</span><span>2026-03-10</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch ">
+          <div class="branch__top">
+            <span class="pill pill--alt">alternative</span>
+            <span class="gap gap--mid">gap 0.10</span>
+            <span class="muted">3 evidence</span>
+          </div>
+          <p class="branch__label">Design doc: sharded billing schema</p>
+          <p class="branch__scores">knowable 0.90 · viable 1.00 · confidence 0.90</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 3 objects predate 2026-03-10</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 2 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>2 object(s) built or deployed elsewhere</td><td class="num">2.000</td></tr><tr><th scope="row">Outcome signal</th><td>2 passed · 0 failed · 1 unknown</td><td class="num">2.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">1.000</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">0.100</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node ">
+          <span class="node__order">4</span>
+          <div class="node__body">
+            <p class="node__title">ADR-003: region-scoped single tenant schema</p>
+            <p class="node__meta"><code>ADR-003</code><span>·</span><span>2026-01-05</span><span>·</span><span>resolved</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch ">
+          <div class="branch__top">
+            <span class="pill pill--alt">alternative</span>
+            <span class="gap gap--mid">gap 0.10</span>
+            <span class="muted">3 evidence</span>
+          </div>
+          <p class="branch__label">ADR-003: region-scoped single tenant schema</p>
+          <p class="branch__scores">knowable 0.90 · viable 1.00 · confidence 0.90</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 3 objects predate 2026-01-05</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 2 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>2 object(s) built or deployed elsewhere</td><td class="num">2.000</td></tr><tr><th scope="row">Outcome signal</th><td>3 passed · 0 failed · 0 unknown</td><td class="num">3.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">1.000</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">0.100</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li></ol>
+  </section>
+    
+  <section class="card">
+    <header class="card__head"><h2>Then vs now</h2><span class="muted">same evidence, two vantage points</span></header>
+    <div class="thennow">
+      <div class="thennow__col thennow__col--head">Knowable at the time</div>
+      <div class="thennow__col thennow__col--head">Viable in hindsight</div>
+      
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">RFC: event-sourced billing ledger</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:27%"></div></div>
+        <p class="meter__label">W_v 0.27 · 0 withheld object(s)</p>
+        <p class="thennow__gap">gap -0.63</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">ADR-014: keep the billing schema unsharded</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:27%"></div></div>
+        <p class="meter__label">W_v 0.27 · 0 withheld object(s)</p>
+        <p class="thennow__gap">gap -0.63</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">Design doc: sharded billing schema</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:100%"></div></div>
+        <p class="meter__label">W_v 1.00 · 2 withheld object(s)</p>
+        <p class="thennow__gap">gap 0.10</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">ADR-003: region-scoped single tenant schema</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:100%"></div></div>
+        <p class="meter__label">W_v 1.00 · 2 withheld object(s)</p>
+        <p class="thennow__gap">gap 0.10</p>
+      </div>
+    </div>
+    </div>
+  </section>
+  </div>
+    
+  <div class="run">
+    <h2 class="run__title">Run 2 — reduce maintenance over a year</h2>
+    <p class="run__intent">Intent: <em>Reduce maintenance burden over the next year</em> · horizon <strong>years</strong></p>
+    <div class="stats">
+      <div class="stat"><span class="stat__value">4</span><span class="stat__label">decisions</span></div>
+      <div class="stat"><span class="stat__value">4</span><span class="stat__label">branches</span></div>
+      <div class="stat"><span class="stat__value">6</span><span class="stat__label">evidence</span></div>
+      <div class="stat"><span class="stat__value">42</span><span class="stat__label">graph ms</span></div>
+      <div class="stat"><span class="stat__value">2</span><span class="stat__label">score ms</span></div>
+    </div>
+    
+  <section class="card">
+    <header class="card__head"><h2>Recommended path</h2><span class="score">score 0.42</span></header>
+    <p class="verdict">ADR-003: region-scoped single tenant schema</p>
+    <div class="lanes">
+      <div class="lane lane--keep"><h3>Keep <span class="lane__count">1</span></h3>
+        <ul><li>ADR-003: region-scoped single tenant schema</li></ul></div>
+      <div class="lane lane--graft"><h3>Graft <span class="lane__count">1</span></h3><p>ADR-003: region-scoped single tenant schema</p></div>
+      <div class="lane lane--unwind"><h3>Unwind <span class="lane__count">3</span></h3>
+        <ul><li>RFC: event-sourced billing ledger <span class="muted">· 0 dependent object(s)</span></li><li>ADR-014: keep the billing schema unsharded <span class="muted">· 4 dependent object(s)</span></li><li>Design doc: sharded billing schema <span class="muted">· 0 dependent object(s)</span></li></ul></div>
+    </div>
+  </section>
+    
+  <section class="card">
+    <header class="card__head"><h2>Decision cascade</h2><span class="muted">4 decisions on the spine</span></header>
+    <ol class="spine">
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">1</span>
+          <div class="node__body">
+            <p class="node__title">RFC: event-sourced billing ledger</p>
+            <p class="node__meta"><code>THREAD-ledger</code><span>·</span><span>2026-07-01</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch branch--taken">
+          <div class="branch__top">
+            <span class="pill pill--taken">taken</span>
+            <span class="gap gap--low">gap -0.63</span>
+            <span class="muted">1 evidence</span>
+          </div>
+          <p class="branch__label">RFC: event-sourced billing ledger</p>
+          <p class="branch__scores">knowable 0.90 · viable 0.27 · confidence 0.27</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 1 objects predate 2026-07-01</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 1 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>0 object(s) built or deployed elsewhere</td><td class="num">0.000</td></tr><tr><th scope="row">Outcome signal</th><td>0 passed · 0 failed · 1 unknown</td><td class="num">0.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">0.270</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">-0.630</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">2</span>
+          <div class="node__body">
+            <p class="node__title">ADR-014: keep the billing schema unsharded</p>
+            <p class="node__meta"><code>ADR-014</code><span>·</span><span>2026-03-12</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch branch--taken">
+          <div class="branch__top">
+            <span class="pill pill--taken">taken</span>
+            <span class="gap gap--low">gap -0.63</span>
+            <span class="muted">1 evidence</span>
+          </div>
+          <p class="branch__label">ADR-014: keep the billing schema unsharded</p>
+          <p class="branch__scores">knowable 0.90 · viable 0.27 · confidence 0.27</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 1 objects predate 2026-03-12</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 1 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>0 object(s) built or deployed elsewhere</td><td class="num">0.000</td></tr><tr><th scope="row">Outcome signal</th><td>0 passed · 0 failed · 1 unknown</td><td class="num">0.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">0.270</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">-0.630</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node node--unresolved">
+          <span class="node__order">3</span>
+          <div class="node__body">
+            <p class="node__title">Design doc: sharded billing schema</p>
+            <p class="node__meta"><code>DESIGN-shard</code><span>·</span><span>2026-03-10</span><span>·</span><span>still open</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch ">
+          <div class="branch__top">
+            <span class="pill pill--alt">alternative</span>
+            <span class="gap gap--mid">gap 0.10</span>
+            <span class="muted">3 evidence</span>
+          </div>
+          <p class="branch__label">Design doc: sharded billing schema</p>
+          <p class="branch__scores">knowable 0.90 · viable 1.00 · confidence 0.90</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 3 objects predate 2026-03-10</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 2 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>2 object(s) built or deployed elsewhere</td><td class="num">2.000</td></tr><tr><th scope="row">Outcome signal</th><td>2 passed · 0 failed · 1 unknown</td><td class="num">2.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">1.000</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">0.100</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li>
+      <li class="spine__item">
+        <div class="node ">
+          <span class="node__order">4</span>
+          <div class="node__body">
+            <p class="node__title">ADR-003: region-scoped single tenant schema</p>
+            <p class="node__meta"><code>ADR-003</code><span>·</span><span>2026-01-05</span><span>·</span><span>resolved</span></p>
+          </div>
+        </div>
+        <ul class="branches">
+        <li class="branch ">
+          <div class="branch__top">
+            <span class="pill pill--alt">alternative</span>
+            <span class="gap gap--mid">gap 0.10</span>
+            <span class="muted">3 evidence</span>
+          </div>
+          <p class="branch__label">ADR-003: region-scoped single tenant schema</p>
+          <p class="branch__scores">knowable 0.90 · viable 1.00 · confidence 0.90</p>
+          <details class="branch__math">
+            <summary>How this was scored</summary>
+            <table><tbody>
+              <tr><th scope="row">Knowable at the time</th><td>1 of 3 objects predate 2026-01-05</td><td class="num">1.000</td></tr><tr><th scope="row">Authority Σ</th><td>0.90</td><td class="num">0.900</td></tr><tr><th scope="row">Recency (avg)</th><td>avg of 1 decays</td><td class="num">1.000</td></tr><tr><th scope="row">Independence (avg)</th><td>1/√n per key, 2 keys</td><td class="num">1.000</td></tr><tr><th scope="row">W_k</th><td>clamp01(Σ authority × recency × independence)</td><td class="num">0.900</td></tr><tr><th scope="row">Implementation proof</th><td>2 object(s) built or deployed elsewhere</td><td class="num">2.000</td></tr><tr><th scope="row">Outcome signal</th><td>3 passed · 0 failed · 0 unknown</td><td class="num">3.000</td></tr><tr><th scope="row">W_v</th><td>clamp01(Σ proof × outcome × independence)</td><td class="num">1.000</td></tr><tr><th scope="row">Gap</th><td>W_v − W_k</td><td class="num">0.100</td></tr>
+            </tbody></table>
+          </details>
+        </li></ul>
+      </li></ol>
+  </section>
+    
+  <section class="card">
+    <header class="card__head"><h2>Then vs now</h2><span class="muted">same evidence, two vantage points</span></header>
+    <div class="thennow">
+      <div class="thennow__col thennow__col--head">Knowable at the time</div>
+      <div class="thennow__col thennow__col--head">Viable in hindsight</div>
+      
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">RFC: event-sourced billing ledger</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:27%"></div></div>
+        <p class="meter__label">W_v 0.27 · 0 withheld object(s)</p>
+        <p class="thennow__gap">gap -0.63</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">ADR-014: keep the billing schema unsharded</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:27%"></div></div>
+        <p class="meter__label">W_v 0.27 · 0 withheld object(s)</p>
+        <p class="thennow__gap">gap -0.63</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">Design doc: sharded billing schema</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:100%"></div></div>
+        <p class="meter__label">W_v 1.00 · 2 withheld object(s)</p>
+        <p class="thennow__gap">gap 0.10</p>
+      </div>
+    </div>
+    <div class="thennow__pair">
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--then" style="width:90%"></div></div>
+        <p class="meter__label">W_k 0.90 · 1 object(s)</p>
+        <p class="thennow__branch">ADR-003: region-scoped single tenant schema</p>
+      </div>
+      <div class="thennow__col">
+        <div class="meter"><div class="meter__fill meter__fill--now" style="width:100%"></div></div>
+        <p class="meter__label">W_v 1.00 · 2 withheld object(s)</p>
+        <p class="thennow__gap">gap 0.10</p>
+      </div>
+    </div>
+    </div>
+  </section>
+  </div>
+  </div>
+</body></html>

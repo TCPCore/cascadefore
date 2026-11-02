@@ -1,5 +1,5 @@
-import type { Horizon, Intent } from '../shared/types.js';
-import { normaliseIntent, parseIntentLocally } from '../domain/intent.js';
+import type { Horizon, Intent } from '../shared/types';
+import { normaliseIntent, parseIntentLocally } from '../domain/intent';
 
 /**
  * Intent parsing is the *only* place a model is allowed, and it is sandboxed:

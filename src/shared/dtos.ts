@@ -8,7 +8,7 @@ import type {
   Recommendation,
   ScopeProbeResult,
   SpineSegment,
-} from './types.js';
+} from './types';
 
 export interface TreeNodeDto {
   id: string;

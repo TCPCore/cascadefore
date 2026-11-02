@@ -1,4 +1,4 @@
-import type { SqlDriver } from './driver.js';
+import type { SqlDriver } from './driver';
 
 /** Tables are prefixed so a shared per-install database never collides. */
 export const DDL: string[] = [

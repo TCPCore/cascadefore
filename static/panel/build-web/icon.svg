@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Cascade">
+  <rect width="32" height="32" rx="8" fill="#0b1220" />
+  <path d="M9 8v6a4 4 0 0 0 4 4h3" fill="none" stroke="#4c9aff" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M9 8v3" fill="none" stroke="#4c9aff" stroke-width="2.2" stroke-linecap="round" />
+  <circle cx="9" cy="7" r="2.4" fill="#4c9aff" />
+  <circle cx="18" cy="18" r="2.4" fill="#8fbcff" />
+  <path d="M18 18h4a4 4 0 0 0 4-4v-3" fill="none" stroke="#8fbcff" stroke-width="2.2" stroke-linecap="round" />
+  <circle cx="26" cy="10" r="2.2" fill="#8fbcff" />
+  <path d="M18 18v4a3 3 0 0 0 3 3h1" fill="none" stroke="#2f6f4f" stroke-width="2.2" stroke-linecap="round" />
+  <circle cx="24" cy="25" r="2.2" fill="#57d9a3" />
+  <circle cx="12" cy="24" r="2" fill="#ffab00" />
+  <path d="M9 14v6a3 3 0 0 0 3 3" fill="none" stroke="#ffab00" stroke-width="2.2" stroke-linecap="round" />
+</svg>

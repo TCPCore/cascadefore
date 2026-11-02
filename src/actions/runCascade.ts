@@ -1,8 +1,8 @@
-import { buildDeps, repository } from '../bootstrap.js';
-import { loadConfig, assertConfigured } from '../config.js';
-import { runPipeline } from '../pipeline/run.js';
-import { newRunId } from '../shared/ids.js';
-import type { Horizon } from '../shared/types.js';
+import { buildDeps, repository } from '../bootstrap';
+import { loadConfig, assertConfigured } from '../config';
+import { runPipeline } from '../pipeline/run';
+import { newRunId } from '../shared/ids';
+import type { Horizon } from '../shared/types';
 
 interface ActionInput {
   workItemKey?: string;

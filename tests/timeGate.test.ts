@@ -5,8 +5,8 @@ import {
   isSuperseded,
   recencyWeight,
   splitByKnowability,
-} from '../src/domain/timeGate.js';
-import { ev } from './fixtures/scenario.js';
+} from '../src/domain/timeGate';
+import { ev } from './fixtures/scenario';
 
 describe('time gate', () => {
   const decidedAt = '2026-03-14T09:12:00.000Z';

@@ -5,9 +5,9 @@ import type {
   EvidenceType,
   Iso,
   SpineSegment,
-} from '../../src/shared/types.js';
-import { AUTHORITY } from '../../src/domain/constants.js';
-import { stableId } from '../../src/shared/ids.js';
+} from '../../src/shared/types';
+import { AUTHORITY } from '../../src/domain/constants';
+import { stableId } from '../../src/shared/ids';
 
 export function ev(
   id: string,

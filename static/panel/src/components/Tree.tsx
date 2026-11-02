@@ -11,6 +11,7 @@ function gapClass(gap: number): string {
 }
 
 export function Tree({ snapshot }: Props): JSX.Element {
+  const nodeById = new Map(snapshot.nodes.map((n) => [n.id, n]));
   const branchesByNode = new Map<string, RunSnapshotDto['branches']>();
   for (const branch of snapshot.branches) {
     const list = branchesByNode.get(branch.nodeId) ?? [];
@@ -37,7 +38,7 @@ export function Tree({ snapshot }: Props): JSX.Element {
                   <p className="node__meta">
                     <code>{shortAri(segment.ari)}</code>
                     <span>·</span>
-                    <span>{segment.decidedAt.slice(0, 10)}</span>
+                    <span>{(nodeById.get(segment.nodeId)?.decidedAt ?? '').slice(0, 10)}</span>
                     <span>·</span>
                     <span>{segment.resolved ? 'resolved' : 'still open'}</span>
                   </p>

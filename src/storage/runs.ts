@@ -6,7 +6,7 @@ import type {
   Recommendation,
   ScopeProbeResult,
   SpineSegment,
-} from '../shared/types.js';
+} from '../shared/types';
 import type {
   BranchViewDto,
   RunSnapshotDto,
@@ -14,9 +14,9 @@ import type {
   RunStatsDto,
   ThenNowRowDto,
   TreeNodeDto,
-} from '../shared/dtos.js';
-import type { SqlDriver } from './driver.js';
-import { ensureSchema } from './schema.js';
+} from '../shared/dtos';
+import type { SqlDriver } from './driver';
+import { ensureSchema } from './schema';
 
 /* ------------------------------------------------------------------ */
 /* Time handling                                                       */

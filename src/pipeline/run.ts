@@ -7,12 +7,12 @@ import type {
   Iso,
   PathCandidate,
   ScopeProbeResult,
-} from '../shared/types.js';
-import type { RunSnapshotDto, RunStage } from '../shared/dtos.js';
-import { assemble, type RawArtifact } from '../graph/extract.js';
-import { scoreBranches } from '../domain/scoring.js';
-import { buildPaths, decide, rankPaths } from '../domain/graft.js';
-import { buildSnapshot } from '../storage/runs.js';
+} from '../shared/types';
+import type { RunSnapshotDto, RunStage } from '../shared/dtos';
+import { assemble, type RawArtifact } from '../graph/extract';
+import { scoreBranches } from '../domain/scoring';
+import { buildPaths, decide, rankPaths } from '../domain/graft';
+import { buildSnapshot } from '../storage/runs';
 
 export interface GraphCollection {
   artifacts: RawArtifact[];

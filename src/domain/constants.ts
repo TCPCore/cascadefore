@@ -1,4 +1,4 @@
-import type { EvidenceType, Horizon } from '../shared/types.js';
+import type { EvidenceType, Horizon } from '../shared/types';
 
 /**
  * Fixed authority table. These numbers are a product decision, not a model

@@ -6,9 +6,9 @@ import type {
   EvidenceType,
   Iso,
   SpineSegment,
-} from '../shared/types.js';
-import { MAX_BRANCHES_PER_NODE, MAX_SPINE_DEPTH, IMPLICIT_CONFIDENCE_CAP, AUTHORITY } from '../domain/constants.js';
-import { stableId } from '../shared/ids.js';
+} from '../shared/types';
+import { MAX_BRANCHES_PER_NODE, MAX_SPINE_DEPTH, IMPLICIT_CONFIDENCE_CAP, AUTHORITY } from '../domain/constants';
+import { stableId } from '../shared/ids';
 
 /**
  * Raw artifact as delivered by the graph layer. Deliberately decoupled from

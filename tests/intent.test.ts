@@ -6,7 +6,7 @@ import {
   intentFit,
   normaliseIntent,
   parseIntentLocally,
-} from '../src/domain/intent.js';
+} from '../src/domain/intent';
 
 describe('constraint tags', () => {
   it('extracts machine-readable tags from free text', () => {

@@ -1,5 +1,5 @@
-import type { GraphCollection, GraphSource } from '../pipeline/run.js';
-import type { RawArtifact } from '../graph/extract.js';
+import type { GraphCollection, GraphSource } from '../pipeline/run';
+import type { RawArtifact } from '../graph/extract';
 
 /**
  * Demo graph.

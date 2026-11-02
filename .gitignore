@@ -1,6 +1,5 @@
 node_modules/
 static/panel/node_modules/
-static/panel/build/
 .forge/
 dist/
 coverage/

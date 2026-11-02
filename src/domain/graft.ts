@@ -10,14 +10,14 @@ import type {
   PathFacts,
   Recommendation,
   SpineSegment,
-} from '../shared/types.js';
+} from '../shared/types';
 import {
   MIGRATION_NORMALISER,
   RESIDUAL_NORMALISER,
-} from './constants.js';
-import { detectConstraintTags, intentFit, type ConstraintTag } from './intent.js';
-import { clamp01, round, sum } from './math.js';
-import { isSuperseded } from './timeGate.js';
+} from './constants';
+import { detectConstraintTags, intentFit, type ConstraintTag } from './intent';
+import { clamp01, round, sum } from './math';
+import { isSuperseded } from './timeGate';
 
 export interface RankOptions {
   now: Iso;

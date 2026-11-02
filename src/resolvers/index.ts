@@ -1,9 +1,10 @@
 import Resolver from '@forge/resolver';
 
-import { isDemoMode, jobQueue, repository } from '../bootstrap.js';
-import { loadConfig } from '../config.js';
-import { newRunId } from '../shared/ids.js';
-import type { Horizon, Intent } from '../shared/types.js';
+import { buildDeps, isDemoMode, jobQueue, repository } from '../bootstrap';
+import { loadConfig } from '../config';
+import { runPipeline } from '../pipeline/run';
+import { newRunId } from '../shared/ids';
+import type { Horizon, Intent } from '../shared/types';
 
 interface StartPayload {
   workItemKey?: string;
@@ -57,6 +58,25 @@ resolver.define('startCascade', async (request: ResolverRequest<StartPayload>) =
     ...FALLBACK_INTENT,
     ...(request.payload?.horizon ? { horizon: request.payload.horizon } : {}),
   });
+
+  // Inline mode runs the reconstruction inside the resolver. It is the right
+  // trade for a seeded demo graph (sub-second) and removes any dependency on
+  // queue propagation during a recorded demo. Async remains the default.
+  if (process.env.CASCADE_INLINE === 'true') {
+    const result = await runPipeline(
+      {
+        runId,
+        workItemKey,
+        intentText: request.payload?.intentText ?? '',
+        horizon: request.payload?.horizon ?? 'weeks',
+        failureAt: createdAt,
+        createdAt,
+      },
+      buildDeps(config),
+    );
+    await repo.save(result.snapshot, result.nodes);
+    return { runId };
+  }
 
   await jobQueue().push({
     body: {

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { view } from '@forge/bridge';
 
 import type { RunSnapshotDto } from '../../../src/shared/dtos';
 import type { Horizon } from '../../../src/shared/types';
-import { getRun, health, startCascade, type Health } from './api';
+import { getRun, health, isStandalone, startCascade, type Health } from './api';
 import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
@@ -26,9 +25,13 @@ export function App(): JSX.Element {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    void health().then(setHealthState);
-    void view
-      .getContext()
+    void health().then((state) => {
+      setHealthState(state);
+      if (state.workItemKey) setIssueKey(state.workItemKey);
+    });
+    if (isStandalone) return;
+    void import('@forge/bridge')
+      .then(({ view }) => view.getContext())
       .then((context: unknown) => {
         const ctx = context as { extension?: { issue?: { key?: string } }; issueKey?: string };
         setIssueKey(ctx.extension?.issue?.key ?? ctx.issueKey ?? '');

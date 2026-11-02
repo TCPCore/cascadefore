@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { runPipeline } from '../src/pipeline/run.js';
-import { createDemoSource } from '../src/demo/seedSource.js';
-import { parseIntentLocally } from '../src/domain/intent.js';
-import type { GraphSource } from '../src/pipeline/run.js';
+import { runPipeline } from '../src/pipeline/run';
+import { createDemoSource } from '../src/demo/seedSource';
+import { parseIntentLocally } from '../src/domain/intent';
+import type { GraphSource } from '../src/pipeline/run';
 
 const NOW = '2026-11-01T12:00:00.000Z';
 const FAILURE_AT = '2026-10-14T09:00:00.000Z';

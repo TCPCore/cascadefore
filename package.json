@@ -12,10 +12,14 @@
     "lint": "forge lint",
     "deploy": "forge deploy",
     "install:app": "forge install",
-    "register:queries": "forge invoke --function register-queries"
+    "register:queries": "forge invoke --function register-queries",
+    "build:web": "npm --prefix static/panel run build:web",
+    "serve:web": "npm run build:web && tsx scripts/serve.ts",
+    "render:report": "tsx scripts/render.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
   },

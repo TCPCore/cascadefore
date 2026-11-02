@@ -1,7 +1,5 @@
 app:
-  # Replace with the id printed by `forge create`. Keeping the placeholder here
-  # makes the omission obvious rather than silent.
-  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
+  id: ari:cloud:ecosystem::app/1fcb1899-1194-47c1-a794-26e4d3e59e0f
   runtime:
     name: nodejs22.x
     memoryMB: 1024
@@ -15,15 +13,25 @@ modules:
       title: Cascade
       icon: resource:main;icon.svg
 
+  # Renders automatically in the issue's right-hand column, so the panel is
+  # visible without hunting through a menu. This is the primary surface.
+  jira:issueContext:
+    - key: cascade-context
+      resource: main
+      resolver:
+        function: resolver
+      title: Cascade
+      label: Cascade
+
   function:
     - key: resolver
-      handler: src/resolvers/index.handler
+      handler: resolvers/index.handler
     - key: reconstruct
-      handler: src/jobs/reconstruct.reconstructHandler
+      handler: jobs/reconstruct.reconstructHandler
     - key: run-cascade
-      handler: src/actions/runCascade.runCascadeAction
+      handler: actions/runCascade.runCascadeAction
     - key: register-queries
-      handler: src/graph/registerQueries.registerQueriesHandler
+      handler: graph/registerQueries.registerQueriesHandler
 
   consumer:
     - key: cascade-jobs
@@ -59,7 +67,8 @@ modules:
   rovo:agent:
     - key: cascade-agent
       name: Cascade
-      description: Reconstructs the decision paths that led to a failure and scores the alternatives
+      description: Reconstructs the decision paths that led to a failure and scores
+        the alternatives
       icon: resource:main;icon.svg
       prompt: resource:agent;prompt.txt
       skills:
@@ -87,6 +96,7 @@ modules:
 
   sql:
     - key: cascade-db
+      engine: mysql
 
 resources:
   - key: main
@@ -96,8 +106,6 @@ resources:
 
 permissions:
   scopes:
-    # Teamwork Graph (per-object, Preview). Every object type touched by a
-    # traversal needs its own scope, including intermediate hops.
     - read:graph:issue:jira
     - read:graph:issue-comment:jira
     - read:graph:issue-status:jira
@@ -113,11 +121,6 @@ permissions:
     - read:graph:build:external
     - read:graph:deployment:external
     - read:graph:pull-request:external
-    # Build-failure trigger
-    - read:repository:bitbucket
-    # Dossier write-back (the "write into the graph" path)
     - read:confluence-content.all
     - write:confluence-content
-    # Demo seeding: the app creates the work item and ADR pages itself, so no
-    # personal API token is ever needed to prepare a site.
     - write:jira-work

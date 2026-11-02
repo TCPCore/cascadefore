@@ -4,10 +4,10 @@ import type {
   BranchScore,
   DecisionNode,
   Evidence,
-} from '../shared/types.js';
-import { OUTCOME_FACTOR } from './constants.js';
-import { clamp01, round, sum } from './math.js';
-import { recencyWeight, splitByKnowability } from './timeGate.js';
+} from '../shared/types';
+import { OUTCOME_FACTOR } from './constants';
+import { clamp01, round, sum } from './math';
+import { recencyWeight, splitByKnowability } from './timeGate';
 
 /**
  * Independence discount.
