@@ -66,10 +66,10 @@ The same evidence, scored against two different intents, produces two different 
 | Confluence mirror + storage-format round trip + ingest | done | 15 tests |
 | Attribution: `decision/<id>` → build → work item → PR | done | 8 tests |
 | Seeder: plan + idempotent executor | done | 8 tests |
-| `rovo:skill` / `rovo:agent` / `rovo:mcp` manifest + artefacts | done | `forge lint` clean; **not** exercised at runtime |
+| MCP: `reconstruct-decision`, `get-run`, `health` | **verified end to end** | real call ran the pipeline, wrote Forge SQL, `get-run` read it back |
 | Deployed Forge app | **live** | v2.1.0 production, Runs-on-Atlassian eligible |
-| In-Jira panel rendering | **not yet confirmed** | module not observed mounting; standalone host exists so the product can be reviewed without it |
-| Live Teamwork Graph calls | **not verified** | needs a site with TWG; demo graph is used instead |
+| In-Jira panel rendering | **not yet confirmed** | never observed mounting; MCP proves the app runs, so this is a surface gap not a runtime gap |
+| Teamwork Graph reads | **verified** | `JiraIssue` by ARI, space edge, pages, page comments with bodies — 6 queries executed, 3 edges rejected (see docs/GRAPH-BOUNDARY.md) |
 | Confluence dossier writer | **hook only** | `writeDossier` dep exists, no implementation |
 | Bitbucket build-status trigger | **not implemented** | needs a Bitbucket app (workspace scope) |
 | Query registration | **not wired** | no `forge invoke` in CLI 15; needs a webtrigger or admin page |

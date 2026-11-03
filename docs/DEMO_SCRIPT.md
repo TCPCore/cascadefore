@@ -1,152 +1,147 @@
-# Demo script — 3 minutes
+# Demo script — 2:30
 
-**Format:** 1080p, screen recording, cursor visible, captions burned in.
-**Rule:** every claim shown on screen is either a test result or a citation. Nothing is asserted verbally that the video does not show.
+**Format:** 1080p, screen recording, cursor visible, captions.
+**Rule:** every claim on screen is either a test result, a live MCP response, or a URL the viewer can open. Nothing is asserted verbally that the video does not show.
+
+---
+
+## The sentence the video is built around
+
+> The demo reconstructs a decision from a thread three humans wrote in 2022 and forgot about — not from an ADR we composed, from prose. The judge can open page `2129941` and read the same three comments.
+
+Everything below serves that sentence.
 
 ---
 
 ## Pre-flight (before recording)
 
 ```bash
-# 1. Sandbox host, file-driven case base with SQL ledger
-CASCADE_STORE=sqlite CASCADE_DB=/tmp/demo.db npx tsx scripts/serve.ts
+# Sandbox on real recorded data: CX-11 + Confluence page 2129941 + its 3 comments
+CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/demo.db npx tsx scripts/serve.ts
 # → http://127.0.0.1:4173
 
-# 2. Prove the runner fails the build on a violation, off-camera
+# The source of the demo, open in a second tab
+open "https://one-atlas-xoan.atlassian.net/wiki/spaces/MD/pages/2129941"
+
+# The runner, to prove a decision can fail a build
 npx tsx scripts/run-decisions.ts --dir examples/decision-repo/.decisions --root examples/decision-repo
 # → exit 1
-
-# 3. Warm both tabs so nothing loads on camera
-open http://127.0.0.1:4173
-open examples/decision-repo/.decisions/0031-datastore-monitoring.decision
 ```
 
-Have these windows ready: terminal (large font), browser at :4173, editor with `.decisions/`.
+Windows ready: browser at `:4173`, Confluence page `2129941`, terminal with large font.
 
 ---
 
-## Beat 1 — the claim (0:00–0:25)
+## Beat 1 — the artefact (0:00–0:20)
 
-**Show:** editor, `0031-datastore-monitoring.decision`.
+**Show:** `examples/decision-repo/.decisions/0031-datastore-monitoring.decision`, `tests:` block visible.
 
-> "This is a decision. Not a document with a date on it — a decision with a test."
+> "A decision that carries its own test. Not a document with a date on it — an assertion about the system, with a defined meaning if it stops being true."
 
-Highlight the `tests:` block, then the `on_fail` line.
-
-> "It says every datastore ships with `pg_stat_statements`. And it says what it means if that stops being true: *this decision is not being followed.*"
-
-**Do not** explain the product yet. Show the artefact.
+Highlight `on_fail`.
 
 ---
 
-## Beat 2 — the build fails (0:25–0:55)
+## Beat 2 — the build fails (0:20–0:45)
 
 **Show:** terminal.
-
-```bash
-npx tsx scripts/run-decisions.ts --dir examples/decision-repo/.decisions --root examples/decision-repo
-```
 
 ```
 decisions: 6   enforced: 4   violated: 1   orphaned: 1
 testability: 83%
-
 ✗ 0031-datastore-monitoring  violated  file not found: infra/monitoring/datastore.yaml
 — 0055-feature-flags-…       orphaned  no tests
+exit=1
 ```
 
-> "Six decisions. Four still hold. One is violated — the code drifted from the decision, and the build is red because of it. One is orphaned: nobody wrote a test, so the case base cannot learn from it. We report that instead of hiding it."
-
-Point at the exit code: `exit=1`.
-
-> "That is the whole enforcement mechanism. No dashboard to check. The pipeline fails."
+> "One decision no longer holds, so the pipeline is red. One is orphaned — nobody wrote a test, so the case base cannot learn from it. We report that rather than hide it."
 
 ---
 
-## Beat 3 — the case base (0:55–1:40)
+## Beat 3 — the real thread (0:45–1:15)
 
-**Show:** browser at :4173 → **Case base** tab.
+**Show:** Confluence page `2129941` in the browser. Scroll to the three comments.
 
-> "Every run accumulates. This is the memory."
+> "This is a real page. Three comments, written in 2022 by three people, about whether Finance should be on the mobile onboarding list."
 
-Point at the four stats: enforced / violated / orphaned / testable %.
+Read them aloud, in order:
 
-**Growth curve** — hover each bar:
+- *"Would that be you?"*
+- *"we need to add Finance to the list here"*
+- *"Yes, for now. We should be getting a dedicated headcount for this project in the upcoming quarter"*
 
-> "Confidence in the leading pattern, as decisions are added. Three clean cases: 0.80 — not 1.00, because three data points is not certainty. Laplace smoothing."
->
-> "The fourth decision is violated. 0.67. The fifth holds. 0.71. The sixth is orphaned — and the curve doesn't move, because a decision nobody can check teaches nothing."
+> "That is a decision, an alternative, and a resolution. Nobody ever recorded it as a decision. It has been sitting here for three years."
 
-**Patterns list:**
-
-> "The pattern isn't a vibe. Four held, one refuted, and here are the exact decision ids it's built from."
-
-**Click decision 0012** → expands:
-
-> "Similar decisions, with reasons — shared domain `datastore`, shared constraint `#no-downtime`. Not a cosine score. You can argue with it."
+**Do not** cut away yet — the viewer must see that the source is real and boring.
 
 ---
 
-## Beat 4 — the outcome trail (1:40–2:15)
+## Beat 4 — the reconstruction (1:15–1:50)
 
-**Show:** scroll to **Outcome trail**.
+**Show:** `http://127.0.0.1:4173` → **Case base** → run, then the tree.
 
-> "How does a violated decision reach Jira without either side sharing a database?"
+```
+1 decision · 3 branches
+  thread  Mobile Development Strategy - Project Charter    | page/2129941
+     alt    we need to add Finance to the list here
+     alt    Would that be you?
+     taken  Yes, for now. We should be getting a dedicated headcount…
+```
 
-Point at the build row: `decision/0031-datastore-monitoring`, state `FAILED`.
+> "One decision, three positions, and the resolution identified as the branch in force. Not three comments — one decision."
 
-> "The runner publishes a commit status named `decision/<id>`. Atlassian already syncs Bitbucket builds into Teamwork Graph. So the join key rides inside the name — and we read the neighbourhood: the build, the work item it touched, the PR, the deployment."
+Point at the taken branch.
 
-Point at `0012` build `SUCCESSFUL` next to `0031` `FAILED`.
+> "The tool did not pick the first comment. It found the resolution, in plain speech, and marked that as the decision."
 
-> "Two decisions, two outcomes, one graph. No connector, no workspace scope, no shared SQL."
+Then the projection panel:
 
----
-
-## Beat 5 — the reconstruction (2:15–2:50)
-
-**Show:** browser → **Reconstruction** tab → **Run Cascade**.
-
-> "The same evidence, read backwards."
-
-Point at the tree, then the **Then vs now** tab.
-
-> "Knowable at the time on the left; viable in hindsight on the right. Same objects, two vantage points. The gap is the finding."
-
-Change **Horizon** from *Weeks* to *Years* → run again.
-
-> "Same evidence, different goal, different recommendation. That's why it isn't hindsight bias."
+> "Every branch is scored on what was knowable then against what proved viable since. The gap is the finding — not a prediction."
 
 ---
 
-## Beat 6 — close (2:50–3:00)
+## Beat 5 — verification the viewer can repeat (1:50–2:15)
 
-**Show:** the manifest modules, scrolling past `rovo:agent`, `rovo:skill`, `rovo:mcp`, `jira:dashboardGadget`, `confluence:contentBylineItem`.
+**Show:** terminal, MCP call.
 
-> "Decisions in the repo. Outcomes in the graph. Memory in the app. The agent's skill library is the record of decisions that survived contact with the codebase."
+```
+reconstruct-decision  → { summary, runId }
+get-run               → evidenceSource: real_confluence_thread
+                        decisions: 1 · branches: 3
+```
 
-End card: repo URL + `Decision as Code`.
+> "The same reconstruction over MCP, from an external client. It reports its own provenance — `real_confluence_thread` — so a reader can tell a real thread from a fixture without trusting me."
 
----
+**Show** the case base growth curve for two seconds:
 
-## Things to say only if true on the day
-
-- "Live Teamwork Graph" — only after a real call is verified.
-- "Installed in Jira" — only if the module is actually mounted.
-- Otherwise use the honest framing: *"the sandbox runs the identical engine; the Forge surfaces are wired and awaiting site verification."*
-
-Do not claim MCP, do not claim the Confluence write, unless demonstrated.
+> "And the case base accumulates: three clean cases read 0.80, not 1.00, because that is what three data points are worth."
 
 ---
 
-## Shot list
+## Beat 6 — close (2:15–2:30)
 
-| # | Time | Surface | Must be visible |
-|---|---|---|---|
-| 1 | 0:00 | editor | `tests:` and `on_fail` |
-| 2 | 0:25 | terminal | violated + orphaned lines, `exit=1` |
-| 3 | 0:55 | :4173 case base | stats, growth bars, patterns |
-| 4 | 1:20 | case base | expanded decision with similar + reasons |
-| 5 | 1:40 | case base | outcome trail with `decision/<id>` |
-| 6 | 2:15 | reconstruction | tree, then/now, horizon flip |
-| 7 | 2:50 | manifest | module list |
+**Show:** `docs/GRAPH-BOUNDARY.md`, scrolled to the five-instance table.
+
+> "Five times a schema assumption produced output that looked right and was wrong — a label, a property, a relationship name, a comment's identity, and finally our own provenance field. Each was caught by an assertion, not by reading output."
+
+> "Plausible output is not evidence. An assertion is."
+
+End card: repo URL.
+
+---
+
+## Optional shot — the panel (do not block on it)
+
+If the Jira panel mounts, insert 15 seconds after Beat 4 showing the same run on a work item **that has history** — never CX-11, which has none.
+
+If it does not mount, do not mention it. The video is complete without it.
+
+---
+
+## Things never to say unless true on the day
+
+- "Live Teamwork Graph" — only after a resolver-context read succeeds.
+- "Installed and working in Jira" — only if the panel is on screen.
+- "Attributes outcomes through the graph" — it does not; the graph has no issue→build edge.
+
+The honest framing is stronger: *the graph supplies context, the case base supplies outcome.*
