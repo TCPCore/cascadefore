@@ -50,8 +50,6 @@ modules:
       handler: jobs/reconstruct.reconstructHandler
     - key: run-cascade
       handler: actions/runCascade.runCascadeAction
-    - key: register-queries
-      handler: graph/registerQueries.registerQueriesHandler
     - key: get-run-fn
       handler: actions/getRun.getRunAction
     - key: health-fn
@@ -109,17 +107,6 @@ modules:
       description: |
         Report whether the app is configured for the real Teamwork Graph or
         running on the seeded demo graph.
-      inputs: {}
-
-    # Registration is a contributor action and needs a UI user session, so it is
-    # an action but deliberately not exposed over MCP.
-    - key: bootstrap-queries
-      name: Register Teamwork Graph queries
-      function: register-queries
-      actionVerb: GET
-      description: |
-        Register the app's persisted Cypher queries and return the keys to store
-        in the app environment.
       inputs: {}
 
   rovo:agent:

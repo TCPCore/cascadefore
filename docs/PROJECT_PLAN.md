@@ -210,4 +210,4 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 **Unblocked 2 Nov (UI):** DAC-050 resolved — panels are hidden behind a manual "Apps" panel in the 2026 work-item view; Atlassian declined a `defaultOpen` option (ECO-1643, "Not Being Considered"). See [JIRA_MOUNT_DIAGNOSIS.md](JIRA_MOUNT_DIAGNOSIS.md). Consequence: add a dashboard gadget (DAC-057) and a Confluence byline item (DAC-058) as first-run surfaces, and lead the demo with the agent + standalone host.
 **Done since:** runner CLI + commit statuses + pipeline config (DAC-023…027, 029), portable case-base SQL + ledger store (DAC-034/035), case-base UI (DAC-037).
 **Done since:** Confluence mirror renderer + idempotent sync + storage-format round trip (DAC-028), ingest parser + round trip (DAC-036), attribution query + mapper (DAC-041), dashboard gadget + byline modules (DAC-052/057), case-base resolvers.
-**Next in queue:** REST adapters for mirror/ingest → dashboard gadget component → demo seeder (DAC-060) → video.
+**Next:** panel mount verification (Gate 1) and resolver user-session check (Gate 2); then video and submission.

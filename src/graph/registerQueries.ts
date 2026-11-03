@@ -3,6 +3,16 @@ import api, { route } from '@forge/api';
 import { QUERY_CATALOG, scopesFor, type QuerySpec } from './queries';
 
 /**
+ * NOT WIRED — kept for the UI context that does not exist yet.
+ *
+ * Registration needs a *user* contributor: as the app it returns 401, and over
+ * MCP `asUser()` cannot obtain graph scopes because the gateway does not support
+ * them. Today the queries are registered by hand in TWG Labs
+ * (see docs/queries-for-twg-labs.md), and the keys are set as app variables.
+ *
+ * Wire this to a resolver once the Jira panel is confirmed to mount; at that
+ * point the resolver has the user session registration needs.
+ *
  * Registers every persisted Cypher query against this app and returns the keys.
  *
  * Registration is idempotent on query text: resubmitting identical Cypher
