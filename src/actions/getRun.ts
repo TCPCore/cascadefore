@@ -1,4 +1,5 @@
 import { repository } from '../bootstrap';
+import { forecastRun, NO_PRECEDENT } from '../domain/forecast';
 import type { Recommendation } from '../shared/types';
 
 /**
@@ -21,6 +22,15 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
 
   const recommendation: Recommendation | null = snapshot.recommendation;
 
+  // Additive: a forecast per path, computed from the stored facts and scores.
+  // No precedent counts are available yet, so every entry carries grade C and a
+  // caveat saying the number is the fact assessment, not evidence.
+  const forecast = forecastRun(
+    snapshot.paths,
+    snapshot.branches.map((b) => ({ branchId: b.id, knowability: b.score.knowability })),
+    NO_PRECEDENT,
+  );
+
   return {
     runId: snapshot.runId,
     status: snapshot.status,
@@ -34,6 +44,16 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
         : recommendation
           ? { kind: recommendation.kind, failingCriterion: recommendation.failingCriterion }
           : null,
+    forecast: forecast.map((entry) => ({
+      branchId: entry.branchId,
+      label: entry.label,
+      probability: entry.prediction.probability,
+      interval: entry.prediction.interval,
+      grade: entry.prediction.grade,
+      baseRate: entry.prediction.baseRate,
+      evidenceCount: entry.prediction.evidenceCount,
+      caveat: entry.prediction.caveat,
+    })),
     decisions: snapshot.nodes.map((node) => ({
       id: node.id,
       kind: node.kind,

@@ -211,3 +211,35 @@ The join key is the decision id, embedded in the commit-status name. No shared D
 **Done since:** runner CLI + commit statuses + pipeline config (DAC-023…027, 029), portable case-base SQL + ledger store (DAC-034/035), case-base UI (DAC-037).
 **Done since:** Confluence mirror renderer + idempotent sync + storage-format round trip (DAC-028), ingest parser + round trip (DAC-036), attribution query + mapper (DAC-041), dashboard gadget + byline modules (DAC-052/057), case-base resolvers.
 **Next:** panel mount verification (Gate 1) and resolver user-session check (Gate 2); then video and submission.
+
+---
+
+## Additive layer: deterministic success forecast (3 Nov)
+
+Nothing existing was modified. Three new files, one new response field.
+
+**`src/domain/predictor.ts`** — deterministic estimator. Same input, same output,
+no model, no sampling. The arithmetic is a weighted blend, not an additive
+log-odds sum, because the additive version was wrong in a way that looked fine:
+
+```
+1 of 6 held, ideal facts   → additive 0.897 ✗   blended 0.531 ✓
+8 of 10 held, poor facts   → additive 0.681     blended 0.655
+```
+
+A handful of favourable facts must never outvote the observed rate. Evidence
+weight is `n / (n + 4)`, so precedent takes over as the sample grows, and with no
+precedent the number is labelled a fact assessment rather than a probability.
+
+**`src/domain/forecast.ts`** — joins stored paths (facts) to stored branches
+(scores) and forecasts each. Precedent counts are injected, never guessed.
+
+**`get-run` response** — new `forecast[]` field: probability, interval, grade,
+base rate, evidence count, caveat. Nothing removed or renamed.
+
+**Grades** A ≥ 8 precedents, B 3–7, C < 3. Grade C carries
+`"the number is the current-fact assessment, not evidence"`.
+
+**Honest state:** no observed outcomes feed precedent yet, so every forecast is
+grade C today. The mechanism is built and tested (196 → 200 tests); the corpus
+that makes it evidence is the next piece.
