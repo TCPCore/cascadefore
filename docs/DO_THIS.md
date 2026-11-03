@@ -15,6 +15,10 @@ source page https://one-atlas-xoan.atlassian.net/wiki/spaces/MD/pages/2129941
 
 ---
 
+> **Development is current: 2.16.0**, deployed 2026-11-03, both Jira and
+> Confluence installs `Up-to-date`. Production is still 2.3.0 and deliberately
+> untouched. The sandbox (`localhost:4173`) runs the same engine.
+
 ## Step 1 — Panel check (3 minutes) ← the only unknown left
 
 **Pick an issue that already has history.** Do **not** use `CX-11`; it was created
