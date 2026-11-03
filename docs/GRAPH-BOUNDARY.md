@@ -153,3 +153,43 @@ Five instances now, all caught by an assertion rather than by reading output:
 | 3 | unknown rels return empty | query "succeeds" | execution |
 | 4 | comment name is identity | three threads | label distinctness test |
 | 5 | provenance can be configured | "real thread" on a fixture | source-declares test |
+
+---
+
+## Counterfactual layer — first measurement (3 Nov)
+
+`src/decisions/alternatives.ts` extracts rejected alternatives **with reasons** and
+splits precedent by the time gate.
+
+Extraction works on prose:
+
+```
+"We considered MongoDB but weak ACID at the time."
+→ MongoDB | because: weak ACID at the time
+```
+
+And the split is the product:
+
+```
+known then   : 0005 (held)                 ← the org already had a data point
+learned later: 0019 (reverted), 0044 (held) ← what it learned afterwards
+```
+
+**But the real 2022 thread yields zero rejected alternatives.** All three
+comments are question, proposal, resolution — nobody wrote down an option they
+turned down. So the counterfactual demo cannot be built on page 2129941; it needs
+a page whose prose contains a rejection marker.
+
+That is the load-bearing assumption in the two-week plan: that rejection prose is
+common. On a sample of one, it is not. **Space-wide mining is now measurable** —
+count pages containing rejection markers before committing to the demo:
+
+```cypher
+MATCH (p:ConfluencePage)-[:document_has_comments]->(c:ConfluenceComment)
+RETURN p.title, c.bodyStorageValue LIMIT 50
+```
+
+If fewer than a handful of pages contain "considered … but", "we rejected", or
+"didn't go with", the counterfactual headline needs a different source of
+alternatives — most likely ADR pages with an explicit *Options considered*
+section, which is what the `.decision` format already models.
