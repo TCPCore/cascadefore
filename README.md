@@ -5,7 +5,7 @@ Reconstructs the decision that seeded a failure, scores the paths that were evid
 Built for **Codegeist 2026** on Forge + Teamwork Graph.
 
 > 📋 **[docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — scope, tasks, milestones, definition of done
-> 🔴 **[docs/NEEDS_FROM_YOU.md](docs/NEEDS_FROM_YOU.md)** — the five things only the account owner can do
+> ✅ **[docs/DO_THIS.md](docs/DO_THIS.md)** — step-by-step for the five things only the account owner can do
 > 🏗 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — how the six parts fit together
 > 🔍 **[docs/JIRA_MOUNT_DIAGNOSIS.md](docs/JIRA_MOUNT_DIAGNOSIS.md)** — why Jira panels are hidden by default Track: **Apps for Software Teams**. Entered for **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, and **Best Marketplace published app**.
 
