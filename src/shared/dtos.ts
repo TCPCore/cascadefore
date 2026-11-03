@@ -21,6 +21,8 @@ export interface TreeNodeDto {
   decidedAt: string;
   confidence: number;
   evidenceCount: number;
+  /** Timestamps behind the evidence, so a timeline can be dated correctly. */
+  evidenceAt?: string[];
 }
 
 export interface BranchViewDto {
@@ -30,6 +32,8 @@ export interface BranchViewDto {
   taken: boolean;
   score: BranchScore;
   evidenceArIs: string[];
+  /** Timestamps aligned to evidenceArIs. */
+  evidenceAt?: string[];
   /** What happens if this branch is taken. Evidence + arithmetic only. */
   projection: Projection | null;
   /** Plain-language forward consequences: what survives, what is undone, cost. */
@@ -62,6 +66,14 @@ export interface RunSnapshotDto {
   event: EventContext;
   /** Provenance of the evidence behind this run. */
   evidenceSource: EvidenceSource;
+  /** Rejected alternatives with their reasons and time-gated precedent. */
+  counterfactuals: Array<{
+    name: string;
+    rejectedBecause: string | null;
+    knownThen: Array<{ decisionId: string; title: string; outcome: string }>;
+    learnedLater: Array<{ decisionId: string; title: string; outcome: string }>;
+    summary: string;
+  }>;
   workItemKey: string;
   failureAt: string;
   status: 'queued' | 'running' | 'loaded' | 'empty' | 'failed';

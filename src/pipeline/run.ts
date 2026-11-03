@@ -11,6 +11,11 @@ import type {
 } from '../shared/types';
 import type { RunSnapshotDto, RunStage } from '../shared/dtos';
 import { assemble, type RawArtifact } from '../graph/extract';
+import {
+  extractRejectedAlternatives,
+  findCounterfactual,
+  type PrecedentDecision,
+} from '../decisions/alternatives';
 import { scoreBranches } from '../domain/scoring';
 import { buildPaths, decide, rankPaths } from '../domain/graft';
 import { buildSnapshot } from '../storage/runs';
@@ -52,6 +57,8 @@ export interface PipelineDeps {
   parseIntent: (text: string, horizon?: Horizon) => Promise<Intent>;
   now: () => Iso;
   writeDossier?: (snapshot: RunSnapshotDto) => Promise<string | null>;
+  /** Comparable decisions used for precedent. Empty means "no precedent yet". */
+  caseBase?: readonly PrecedentDecision[];
   onStage?: (stage: RunStage) => Promise<void>;
 }
 
@@ -84,6 +91,7 @@ function emptySnapshot(
     runId: input.runId,
     event,
     evidenceSource,
+    counterfactuals: [],
     workItemKey: input.workItemKey,
     workItemAri: `ari:cloud:jira::issue/${input.workItemKey}`,
     failureAt: input.failureAt,
@@ -174,7 +182,30 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
     };
   });
 
+  // Rejected alternatives, with reasons, compared against precedent and split by
+  // the time gate. Computed from the prose the run actually read.
+  const prose = collection.artifacts
+    .filter((a) => a.type === 'confluence-comment' || a.type === 'jira-comment')
+    .map((a) => ({ ari: a.ari, body: a.bodyText ?? a.title, createdAt: a.createdAt }));
+
+  const counterfactuals = extractRejectedAlternatives(prose, event.at).map((alternative) => {
+    const found = findCounterfactual(alternative, deps.caseBase ?? [], event.at);
+    const project = (p: { decisionId: string; title: string; outcome: string }) => ({
+      decisionId: p.decisionId,
+      title: p.title,
+      outcome: p.outcome,
+    });
+    return {
+      name: alternative.name,
+      rejectedBecause: alternative.rejected_because,
+      knownThen: found.knownThen.map(project),
+      learnedLater: found.learnedLater.map(project),
+      summary: found.summary,
+    };
+  });
+
   const snapshot = buildSnapshot({
+    counterfactuals,
     runId: input.runId,
     event,
     evidenceSource,

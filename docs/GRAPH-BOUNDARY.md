@@ -193,3 +193,32 @@ If fewer than a handful of pages contain "considered … but", "we rejected", or
 "didn't go with", the counterfactual headline needs a different source of
 alternatives — most likely ADR pages with an explicit *Options considered*
 section, which is what the `.decision` format already models.
+
+---
+
+## Forensic layer (3 Nov) — the three missing pieces, built
+
+| Was missing | Now |
+|---|---|
+| No timeline from an action | `src/domain/timeline.ts` — chronological entries, each marked knowable-then vs learned-since; `timelineAsOf(T)` truncates the world to any date |
+| No "as of" tree | `src/domain/asOf.ts` — `treeAt(T)` returns decisions made by T, paths still open at T, and evidence that did not exist yet; `describeTree()` states it in plain language |
+| Counterfactual unreachable | computed in the pipeline and carried on every run; returned by `get-run` as `counterfactuals[]` |
+
+Measured on the real page:
+
+```
+2021-08-17  evidence   page created
+2022-03-26  evidence   "Would that be you?"
+2022-03-26  evidence   "we need to add Finance to the list here"
+2022-03-26  decision   Mobile Development Strategy - Project Charter
+2022-03-26  resolution "Yes, for now — dedicated headcount next quarter"
+2026-11-03  action     Build failure CX-11
+→ 9 knowable then, 0 learned since
+
+AS OF 2022-06-01:  8 entries visible   ← the past, reconstructed
+AS OF 2021-01-01:  "no decision had been made yet; 3 path(s) still open"
+```
+
+Requires evidence timestamps to survive storage, which they previously did not —
+branches were dated at the action, silently. `timelineInputFrom(snapshot)` is the
+single adapter that re-pairs them; every consumer goes through it.

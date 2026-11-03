@@ -61,6 +61,7 @@ export interface SnapshotInput {
   runId: string;
   event: EventContext;
   evidenceSource: EvidenceSource;
+  counterfactuals: RunSnapshotDto['counterfactuals'];
   workItemKey: string;
   workItemAri: string;
   failureAt: string;
@@ -93,6 +94,7 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
     decidedAt: n.decidedAt,
     confidence: n.confidence,
     evidenceCount: n.evidence.length,
+    evidenceAt: n.evidence.map((e) => e.createdAt),
   }));
 
   const branches: BranchViewDto[] = input.branches.map(({ branch, score, projection, consequence }) => ({
@@ -102,6 +104,9 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
     taken: branch.taken,
     score,
     evidenceArIs: [...score.knowableEvidenceAris, ...score.withheldEvidenceAris],
+    evidenceAt: ((branch as unknown as { evidence?: Array<{ createdAt: string }> }).evidence ?? []).map(
+      (e) => e.createdAt,
+    ),
     projection: projection ?? null,
     consequence: consequence ?? [],
   }));
@@ -120,6 +125,7 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
     runId: input.runId,
     event: input.event,
     evidenceSource: input.evidenceSource,
+    counterfactuals: input.counterfactuals,
     workItemKey: input.workItemKey,
     failureAt: input.failureAt,
     status: input.status,
@@ -157,12 +163,13 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
       (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, evidence_source,
        intent_json, intent_source, spine_json, recommendation_json, stats_json, scope_probe_json,
        dossier_url, error_code, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         status = VALUES(status),
         stage = VALUES(stage),
         event_json = VALUES(event_json),
         evidence_source = VALUES(evidence_source),
+        counterfactuals_json = VALUES(counterfactuals_json),
         intent_json = VALUES(intent_json),
         intent_source = VALUES(intent_source),
         spine_json = VALUES(spine_json),
@@ -181,6 +188,7 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
       snapshot.stage,
       JSON.stringify(snapshot.event),
       snapshot.evidenceSource,
+      JSON.stringify(snapshot.counterfactuals),
       JSON.stringify(snapshot.intent),
       snapshot.intent.source,
       JSON.stringify(snapshot.spine),
@@ -235,10 +243,11 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
 
   snapshot.branches.forEach((branch, index) => {
     statements.push({
-      text: `INSERT INTO cascade_branches (run_id, branch_id, node_id, label, taken, score_json)
-        VALUES (?, ?, ?, ?, ?, ?)
+      text: `INSERT INTO cascade_branches (evidence_at_json, run_id, branch_id, node_id, label, taken, score_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE label = VALUES(label), score_json = VALUES(score_json)`,
       params: [
+        JSON.stringify(branch.evidenceAt ?? []),
         snapshot.runId,
         branch.id,
         branch.nodeId,
@@ -280,6 +289,7 @@ export interface RunRow {
   work_item_key: string;
   event_json?: unknown;
   evidence_source?: string | null;
+  counterfactuals_json?: unknown;
   failure_at: unknown;
   status: string;
   stage: string;
@@ -309,6 +319,7 @@ export interface BranchRow {
   label: string;
   taken: number;
   score_json: unknown;
+  evidence_at_json?: unknown;
 }
 
 export interface PathRow {
@@ -380,6 +391,7 @@ export function hydrate(
       taken: Boolean(b.taken),
       score,
       evidenceArIs: [...score.knowableEvidenceAris, ...score.withheldEvidenceAris],
+      evidenceAt: parseJson<string[]>(b.evidence_at_json, []),
       projection,
       consequence,
     };
@@ -402,6 +414,7 @@ export function hydrate(
   return {
     runId: run.run_id,
     evidenceSource: (run.evidence_source as EvidenceSource) ?? 'seeded_fixture',
+    counterfactuals: parseJson<RunSnapshotDto['counterfactuals']>(run.counterfactuals_json, []),
     event: parseJson<EventContext>(run.event_json, {
       kind: 'build-failure',
       subjectKey: run.work_item_key,

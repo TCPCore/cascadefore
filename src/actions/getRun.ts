@@ -1,5 +1,7 @@
 import { repository } from '../bootstrap';
 import { forecastRun, NO_PRECEDENT } from '../domain/forecast';
+import { buildTimeline, timelineInputFrom } from '../domain/timeline';
+import { treeAt, describeTree } from '../domain/asOf';
 import type { Recommendation } from '../shared/types';
 
 /**
@@ -25,6 +27,12 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
   // Additive: a forecast per path, computed from the stored facts and scores.
   // No precedent counts are available yet, so every entry carries grade C and a
   // caveat saying the number is the fact assessment, not evidence.
+  // The forensic view: how we got here, and what the tree looked like at the
+  // moment of the action.
+  const view = timelineInputFrom(snapshot);
+  const timeline = buildTimeline(view);
+  const asOf = treeAt(view, snapshot.event.at);
+
   const forecast = forecastRun(
     snapshot.paths,
     snapshot.branches.map((b) => ({ branchId: b.id, knowability: b.score.knowability })),
@@ -44,6 +52,19 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
         : recommendation
           ? { kind: recommendation.kind, failingCriterion: recommendation.failingCriterion }
           : null,
+    timeline: {
+      summary: describeTree(asOf),
+      knowableThen: timeline.knowableThen,
+      learnedSince: timeline.learnedSince,
+      entries: timeline.entries.slice(-25).map((entry) => ({
+        at: entry.at,
+        kind: entry.kind,
+        title: entry.title,
+        ari: entry.ari,
+        knowableAtAnchor: entry.knowableAtAnchor,
+      })),
+    },
+    counterfactuals: snapshot.counterfactuals,
     forecast: forecast.map((entry) => ({
       branchId: entry.branchId,
       label: entry.label,

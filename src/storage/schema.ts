@@ -11,6 +11,7 @@ export const DDL: string[] = [
     stage VARCHAR(24) NOT NULL,
     event_json JSON,
     evidence_source VARCHAR(32),
+    counterfactuals_json JSON,
     intent_json JSON,
     intent_source VARCHAR(24),
     spine_json JSON,
@@ -47,6 +48,7 @@ export const DDL: string[] = [
     PRIMARY KEY (run_id, ari)
   )`,
   `CREATE TABLE IF NOT EXISTS cascade_branches (
+    evidence_at_json JSON,
     run_id VARCHAR(64) NOT NULL,
     branch_id VARCHAR(64) NOT NULL,
     node_id VARCHAR(64) NOT NULL,
@@ -75,6 +77,8 @@ export const DDL: string[] = [
 export const COLUMN_MIGRATIONS: string[] = [
   `ALTER TABLE cascade_runs ADD COLUMN event_json JSON`,
   `ALTER TABLE cascade_runs ADD COLUMN evidence_source VARCHAR(32)`,
+  `ALTER TABLE cascade_runs ADD COLUMN counterfactuals_json JSON`,
+  `ALTER TABLE cascade_branches ADD COLUMN evidence_at_json JSON`,
 ];
 
 /**
