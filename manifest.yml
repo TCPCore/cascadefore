@@ -136,6 +136,14 @@ modules:
         running on the seeded demo graph.
       inputs: {}
 
+  # Jira Automation action: a rule can invoke the reconstruction without anyone
+  # opening the app. This is the "assign the work to Cascade" path.
+  automation:actionProvider:
+    - key: cascade-automation
+      actions:
+        - reconstruct-decision
+        - get-run
+
   rovo:agent:
     - key: cascade-agent
       name: Cascade
