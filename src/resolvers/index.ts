@@ -194,6 +194,19 @@ resolver.define('recentPages', async () => {
   }
 });
 
+resolver.define('attribution', async () => ({
+  // No verified path exists from a work item to a build (see GRAPH-BOUNDARY),
+  // so there is nothing to attribute from the graph. Reporting an empty summary
+  // is the truthful answer; an error here just broke the case-base view.
+  decisions: [],
+  builds: 0,
+  workItems: 0,
+  pullRequests: 0,
+  deployments: 0,
+  failedBuilds: 0,
+  events: [],
+}));
+
 resolver.define('recentRuns', async () => {
   try {
     return { runs: await repository().listRecent(15), error: null };

@@ -1260,3 +1260,5 @@ select:focus,
 }
 
 .link:hover { color: #0747a6; }
+
+.card--warnbox { border-left: 3px solid #ff991f; }

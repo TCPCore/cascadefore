@@ -8,7 +8,14 @@ import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
 import { CaseBase } from './components/CaseBase';
-import { recentPages, recentRuns, recentWorkItems, type PageOption, type RunOption, type WorkItemOption } from './api';
+import {
+  recentPages,
+  recentRuns,
+  recentWorkItems,
+  type PageOption,
+  type RunOption,
+  type WorkItemOption,
+} from './api';
 import { Forensic } from './components/Forensic';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
@@ -35,6 +42,8 @@ export function App(): JSX.Element {
   const [workItems, setWorkItems] = useState<WorkItemOption[]>([]);
   const [pages, setPages] = useState<PageOption[]>([]);
   const [runs, setRuns] = useState<RunOption[]>([]);
+  const [pickerError, setPickerError] = useState<string | null>(null);
+  const [pickersLoaded, setPickersLoaded] = useState(false);
   const [healthState, setHealthState] = useState<Health | null>(null);
   const [intentText, setIntentText] = useState(DEFAULT_GOAL);
   const [horizon, setHorizon] = useState<Horizon>('weeks');
@@ -50,9 +59,23 @@ export function App(): JSX.Element {
   const [mode, setMode] = useState<'run' | 'cases'>('run');
 
   useEffect(() => {
-    void recentWorkItems().then(setWorkItems).catch(() => setWorkItems([]));
-    void recentPages().then(setPages).catch(() => setPages([]));
-    void recentRuns().then(setRuns).catch(() => setRuns([]));
+    // A failed picker is visible, not silent: an empty dropdown and a broken
+    // resolver look identical otherwise.
+    void Promise.all([recentWorkItems(), recentPages(), recentRuns()])
+      .then(([items, pages, runs]) => {
+        setWorkItems(items);
+        setPages(pages);
+        setRuns(runs);
+        setPickerError(
+          items.length === 0 && pages.length === 0
+            ? 'No recent records came back from Jira or Confluence.'
+            : null,
+        );
+      })
+      .catch((error: unknown) => {
+        setPickerError(error instanceof Error ? error.message : String(error));
+      })
+      .finally(() => setPickersLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -159,7 +182,8 @@ export function App(): JSX.Element {
       <header className="panel__head">
         <div>
           <h1>
-            Cascade <span className="panel__issue">{issueKey || 'no work item'}</span>
+            Cascade <span className="panel__issue">{issueKey || 'no work item'}</span>{' '}
+            <span className="badge badge--evidence">build 241107</span>
           </h1>
           <p className="muted">
             Reconstruct the decision that seeded this failure, and score the paths that were
@@ -193,6 +217,16 @@ export function App(): JSX.Element {
 
       {mode === 'run' && (
       <>
+      {pickersLoaded && pickerError && (
+        <section className="card card--warnbox">
+          <h2>Recent records unavailable</h2>
+          <p className="muted">{pickerError}</p>
+          <p className="hint">
+            You can still type a work item key below. This message means the picker request failed —
+            not that the workspace is empty.
+          </p>
+        </section>
+      )}
       {runs.length > 0 && (
         <section className="card">
           <h2>Recent reconstructions</h2>
