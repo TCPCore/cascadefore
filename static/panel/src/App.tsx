@@ -191,7 +191,15 @@ export function App(): JSX.Element {
           </p>
         </div>
         <div className="badges">
-          {healthState?.demoMode && <span className="badge badge--demo">demo graph</span>}
+          {/* The badge says which source the next run will use, not a global
+              mode — a page id overrides the seeded graph entirely. */}
+          {pageId.trim() ? (
+            <span className="badge badge--decision">real Confluence thread</span>
+          ) : healthState?.demoMode ? (
+            <span className="badge badge--demo">seeded data</span>
+          ) : (
+            <span className="badge badge--decision">live graph</span>
+          )}
           {healthState && !healthState.configured && !healthState.demoMode && (
             <span className="badge badge--warn">queries not registered</span>
           )}
