@@ -473,6 +473,10 @@ export class RunRepository {
   }
 
   async save(snapshot: RunSnapshotDto, nodes: readonly DecisionNode[]): Promise<void> {
+    // A cold instance has no tables. `create()` ensured this, but a caller that
+    // only saves (webhook, replay, a resumed run) used to hit "Unknown SQL
+    // execution error" on the first write of a fresh environment.
+    await ensureSchema(this.driver);
     for (const statement of persistStatements(snapshot, nodes)) {
       await this.driver.query(statement.text, statement.params);
     }
@@ -486,6 +490,7 @@ export class RunRepository {
   }
 
   async get(runId: string): Promise<RunSnapshotDto | null> {
+    await ensureSchema(this.driver);
     const runs = await this.driver.query<RunRow>('SELECT * FROM cascade_runs WHERE run_id = ? LIMIT 1', [runId]);
     const run = runs[0];
     if (!run) return null;
