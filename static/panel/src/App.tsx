@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { RunSnapshotDto } from '../../../src/shared/dtos';
 import type { Horizon } from '../../../src/shared/types';
-import { getRun, health, isStandalone, startCascade, type Health } from './api';
+import { getRun, health, isStandalone, startCascade, type Health, type RunView,
+} from './api';
 import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
 import { CaseBase } from './components/CaseBase';
+import { Forensic } from './components/Forensic';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
@@ -32,6 +34,9 @@ export function App(): JSX.Element {
   const [eventKind, setEventKind] = useState('build-failure');
   const [phase, setPhase] = useState<Phase>('idle');
   const [snapshot, setSnapshot] = useState<RunSnapshotDto | null>(null);
+  // The run view carries the forensic layer (timeline + counterfactuals) that the
+  // snapshot does not.
+  const [runView, setRunView] = useState<RunView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('tree');
   const [elapsed, setElapsed] = useState(0);
@@ -78,6 +83,7 @@ export function App(): JSX.Element {
     setPhase('working');
     setError(null);
     setSnapshot(null);
+    setRunView(null);
     setElapsed(0);
 
     try {
@@ -93,6 +99,7 @@ export function App(): JSX.Element {
         const result = await getRun(started.runId);
         if (result.snapshot) {
           setSnapshot(result.snapshot);
+          setRunView(result);
           if (result.snapshot.status !== 'running' && result.snapshot.status !== 'queued') {
             setPhase('done');
             return;
@@ -150,6 +157,15 @@ export function App(): JSX.Element {
       <>
       <section className="card">
         <label className="field">
+          <span>Work item key</span>
+          <input
+            value={issueKey}
+            placeholder="LEO-47"
+            onChange={(event) => setIssueKey(event.target.value)}
+          />
+        </label>
+
+        <label className="field">
           <span>What are you trying to achieve?</span>
           <textarea
             value={intentText}
@@ -180,7 +196,7 @@ export function App(): JSX.Element {
             </select>
           </label>
 
-          <button className="btn" onClick={() => void run()} disabled={phase === 'working' || !issueKey}>
+          <button className="btn" onClick={() => void run()} disabled={phase === 'working' || !issueKey.trim()}>
             {phase === 'working' ? `Reconstructing… ${elapsed}s` : 'Run Cascade'}
           </button>
         </div>
@@ -228,6 +244,7 @@ export function App(): JSX.Element {
           <nav className="tabs" aria-label="Views">
             {(
               [
+                ['forensic', 'Forensic view'],
                 ['tree', 'Decision tree'],
                 ['thennow', 'Then vs now'],
                 ['graft', 'Recommended path'],
@@ -243,6 +260,13 @@ export function App(): JSX.Element {
             ))}
           </nav>
 
+          {tab === 'forensic' && runView?.timeline && (
+            <Forensic
+              timeline={runView.timeline}
+              counterfactuals={runView.counterfactuals ?? []}
+              anchorAt={runView.snapshot?.event.at ?? snapshot.event.at}
+            />
+          )}
           {tab === 'tree' && <DecisionExplorer snapshot={snapshot} />}
           {tab === 'thennow' && <ThenNow snapshot={snapshot} />}
           {tab === 'graft' && <Graft snapshot={snapshot} />}

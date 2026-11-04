@@ -40,6 +40,9 @@ export async function getRunAction(event: unknown): Promise<Record<string, unkno
   );
 
   return {
+    // The panel renders from the snapshot; MCP consumers read the flattened view
+    // alongside it. Both come from one read.
+    snapshot,
     runId: snapshot.runId,
     status: snapshot.status,
     evidenceSource: snapshot.evidenceSource,

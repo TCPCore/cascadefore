@@ -146,15 +146,50 @@ export async function startCascade(input: {
   return await bridgeInvoke<StartResult>('startCascade', input);
 }
 
-export async function getRun(runId: string): Promise<{
+export interface TimelineEntryRow {
+  at: string;
+  kind: string;
+  title: string;
+  ari: string | null;
+  knowableAtAnchor: boolean;
+}
+
+export interface CounterfactualRow {
+  name: string;
+  rejectedBecause: string | null;
+  knownThen: Array<{ decisionId: string; title: string; outcome: string }>;
+  learnedLater: Array<{ decisionId: string; title: string; outcome: string }>;
+  summary: string;
+}
+
+export interface RunView {
   snapshot?: RunSnapshotDto;
+  timeline?: {
+    summary: string;
+    knowableThen: number;
+    learnedSince: number;
+    entries: TimelineEntryRow[];
+  };
+  counterfactuals?: CounterfactualRow[];
+  forecast?: Array<{
+    branchId: string;
+    label: string;
+    probability: number;
+    interval: [number, number];
+    grade: string;
+    baseRate: number;
+    evidenceCount: number;
+    caveat: string | null;
+  }>;
   error?: string;
   message?: string;
-}> {
+}
+
+export async function getRun(runId: string): Promise<RunView> {
   if (standalone) {
     return jsonFetch(`/api/runs/${encodeURIComponent(runId)}`);
   }
-  return await bridgeInvoke<{ snapshot?: RunSnapshotDto; error?: string; message?: string }>('getRun', { runId });
+  return await bridgeInvoke<RunView>('getRun', { runId });
 }
 
 export async function getDecisionReport(): Promise<DecisionReport | null> {
