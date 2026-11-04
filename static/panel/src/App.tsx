@@ -8,6 +8,7 @@ import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
 import { ThenNow } from './components/ThenNow';
 import { CaseBase } from './components/CaseBase';
+import { recentPages, recentRuns, recentWorkItems, type PageOption, type RunOption, type WorkItemOption } from './api';
 import { Forensic } from './components/Forensic';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
@@ -30,6 +31,10 @@ export function App(): JSX.Element {
   const [issueKey, setIssueKey] = useState('');
   // A Confluence page id switches the source to the live thread on that page.
   const [pageId, setPageId] = useState('');
+  // Records pulled from the platform, so the form offers choices.
+  const [workItems, setWorkItems] = useState<WorkItemOption[]>([]);
+  const [pages, setPages] = useState<PageOption[]>([]);
+  const [runs, setRuns] = useState<RunOption[]>([]);
   const [healthState, setHealthState] = useState<Health | null>(null);
   const [intentText, setIntentText] = useState(DEFAULT_GOAL);
   const [horizon, setHorizon] = useState<Horizon>('weeks');
@@ -43,6 +48,12 @@ export function App(): JSX.Element {
   const [tab, setTab] = useState<Tab>('tree');
   const [elapsed, setElapsed] = useState(0);
   const [mode, setMode] = useState<'run' | 'cases'>('run');
+
+  useEffect(() => {
+    void recentWorkItems().then(setWorkItems).catch(() => setWorkItems([]));
+    void recentPages().then(setPages).catch(() => setPages([]));
+    void recentRuns().then(setRuns).catch(() => setRuns([]));
+  }, []);
 
   useEffect(() => {
     void health().then((state) => {
@@ -80,6 +91,25 @@ export function App(): JSX.Element {
     const timer = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 500);
     return () => clearInterval(timer);
   }, [phase]);
+
+  const openRun = useCallback(async (runId: string) => {
+    setPhase('working');
+    setError(null);
+    try {
+      const result = await getRun(runId);
+      if (result.snapshot) {
+        setSnapshot(result.snapshot);
+        setRunView(result);
+        setPhase('done');
+      } else {
+        setError(result.message ?? 'That run could not be loaded.');
+        setPhase('error');
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not load that run.');
+      setPhase('error');
+    }
+  }, []);
 
   const run = useCallback(async () => {
     setPhase('working');
@@ -163,23 +193,64 @@ export function App(): JSX.Element {
 
       {mode === 'run' && (
       <>
+      {runs.length > 0 && (
+        <section className="card">
+          <h2>Recent reconstructions</h2>
+          <p className="muted">Pulled from this installation's ledger — pick one to reopen it.</p>
+          <ul className="runs">
+            {runs.slice(0, 8).map((item) => (
+              <li key={item.runId} className="runs__row">
+                <button className="link" onClick={() => void openRun(item.runId)}>
+                  {item.workItemKey}
+                </button>
+                <span className="badge badge--evidence">{item.status}</span>
+                <span className="muted">{item.createdAt.slice(0, 16).replace('T', ' ')}</span>
+                <span className="badge badge--decision">{item.evidenceSource}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="card">
         <label className="field">
-          <span>Work item key</span>
-          <input
-            value={issueKey}
-            placeholder="LEO-47"
-            onChange={(event) => setIssueKey(event.target.value)}
-          />
+          <span>Work item {workItems.length > 0 ? `· ${workItems.length} recent` : ''}</span>
+          {workItems.length > 0 ? (
+            <select value={issueKey} onChange={(event) => setIssueKey(event.target.value)}>
+              <option value="">Choose a recent work item…</option>
+              {workItems.map((item) => (
+                <option key={item.key} value={item.key}>
+                  {item.key} — {item.summary.slice(0, 60)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={issueKey}
+              placeholder="LEO-47"
+              onChange={(event) => setIssueKey(event.target.value)}
+            />
+          )}
         </label>
 
         <label className="field">
-          <span>Confluence page id (optional — reads the real thread)</span>
-          <input
-            value={pageId}
-            placeholder="2129941"
-            onChange={(event) => setPageId(event.target.value)}
-          />
+          <span>Confluence page {pages.length > 0 ? `· ${pages.length} recent` : '(optional)'}</span>
+          {pages.length > 0 ? (
+            <select value={pageId} onChange={(event) => setPageId(event.target.value)}>
+              <option value="">None — use the seeded graph</option>
+              {pages.map((page) => (
+                <option key={page.id} value={page.id}>
+                  {page.title.slice(0, 70)} · {page.createdAt.slice(0, 10)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={pageId}
+              placeholder="2129941"
+              onChange={(event) => setPageId(event.target.value)}
+            />
+          )}
         </label>
 
         <label className="field">

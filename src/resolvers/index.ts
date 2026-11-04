@@ -8,7 +8,7 @@ import { buildDecisionReport, findSimilarFor } from '../decisions/service';
 import { loadSeedDecisions } from '../decisions/seed';
 import { buildRunView } from '../actions/runView';
 import { createConfluenceSource } from '../graph/confluenceThread';
-import api from '@forge/api';
+import api, { route } from '@forge/api';
 import type { Horizon, Intent } from '../shared/types';
 
 interface StartPayload {
@@ -110,6 +110,96 @@ resolver.define('startCascade', async (request: ResolverRequest<StartPayload>) =
   });
 
   return { runId };
+});
+
+/**
+ * Recent records, so the panel offers choices instead of demanding a key.
+ *
+ * Jira first, then Confluence; both as the acting user, so the list is exactly
+ * what that person is allowed to see. Failures return an empty list with a
+ * reason rather than an error — a picker that cannot load must not stop the
+ * reconstruction from working manually.
+ */
+resolver.define('recentWorkItems', async () => {
+  type IssueBody = {
+    issues?: Array<{
+      key?: string;
+      fields?: { summary?: string; created?: string; status?: { name?: string } };
+    }>;
+  };
+
+  const shape = (body: IssueBody) => ({
+    items: (body.issues ?? [])
+      .filter((issue) => issue.key)
+      .map((issue) => ({
+        key: issue.key as string,
+        summary: issue.fields?.summary ?? '',
+        status: issue.fields?.status?.name ?? '',
+        createdAt: issue.fields?.created ?? '',
+      })),
+    error: null as string | null,
+  });
+
+  try {
+    // Enhanced search first (current API), then the classic endpoint. Atlassian
+    // has been retiring the old one, so trying both is the difference between a
+    // picker and an empty list.
+    const enhanced = await api.asUser().requestJira(route`/rest/api/3/search/jql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        jql: 'order by created DESC',
+        maxResults: 25,
+        fields: ['summary', 'status', 'created'],
+      }),
+    });
+
+    if (enhanced.ok) return shape((await enhanced.json()) as IssueBody);
+
+    const classic = await api.asUser().requestJira(
+      route`/rest/api/3/search?jql=order by created DESC&maxResults=25&fields=summary,status,created`,
+    );
+    if (classic.ok) return shape((await classic.json()) as IssueBody);
+
+    return { items: [], error: `JIRA_SEARCH_${enhanced.status}/${classic.status}` };
+  } catch (error) {
+    return { items: [], error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+resolver.define('recentPages', async () => {
+  try {
+    const response = await api.asUser().requestConfluence(
+      route`/wiki/api/v2/pages?sort=-created-date&limit=25`,
+    );
+    if (!response.ok) {
+      return { items: [], error: `CONFLUENCE_PAGES_${response.status}` };
+    }
+    const body = (await response.json()) as {
+      results?: Array<{ id?: string; title?: string; createdAt?: string }>;
+    };
+
+    return {
+      items: (body.results ?? [])
+        .filter((page) => page.id)
+        .map((page) => ({
+          id: page.id as string,
+          title: page.title ?? '',
+          createdAt: page.createdAt ?? '',
+        })),
+      error: null,
+    };
+  } catch (error) {
+    return { items: [], error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+resolver.define('recentRuns', async () => {
+  try {
+    return { runs: await repository().listRecent(15), error: null };
+  } catch (error) {
+    return { runs: [], error: error instanceof Error ? error.message : String(error) };
+  }
 });
 
 resolver.define('getRun', async (request: ResolverRequest<{ runId: string }>) => {

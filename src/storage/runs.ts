@@ -489,6 +489,28 @@ export class RunRepository {
     );
   }
 
+  /** Recent runs, newest first — the "past events" list for the panel. */
+  async listRecent(limit = 15): Promise<
+    Array<{ runId: string; workItemKey: string; status: string; createdAt: string; evidenceSource: string }>
+  > {
+    await ensureSchema(this.driver);
+    const rows = await this.driver.query<{
+      run_id: string;
+      work_item_key: string;
+      status: string;
+      created_at: unknown;
+      evidence_source?: string | null;
+    }>('SELECT * FROM cascade_runs ORDER BY created_at DESC LIMIT ?', [Math.max(1, Math.min(50, limit))]);
+
+    return rows.map((row) => ({
+      runId: row.run_id,
+      workItemKey: row.work_item_key,
+      status: row.status,
+      createdAt: fromSqlDateTime(row.created_at),
+      evidenceSource: (row.evidence_source as string) ?? 'seeded_fixture',
+    }));
+  }
+
   async get(runId: string): Promise<RunSnapshotDto | null> {
     await ensureSchema(this.driver);
     const runs = await this.driver.query<RunRow>('SELECT * FROM cascade_runs WHERE run_id = ? LIMIT 1', [runId]);

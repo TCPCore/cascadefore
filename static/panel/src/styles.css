@@ -1236,3 +1236,27 @@ select:focus,
   align-items: flex-start;
   gap: 16px;
 }
+
+/* Recent runs ------------------------------------------------------------ */
+.runs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.runs__row {
+  display: grid;
+  grid-template-columns: 120px 90px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #0052cc;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.link:hover { color: #0747a6; }

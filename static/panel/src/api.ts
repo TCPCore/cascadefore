@@ -127,6 +127,52 @@ export async function health(): Promise<Health> {
   }
 }
 
+export interface WorkItemOption {
+  key: string;
+  summary: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PageOption {
+  id: string;
+  title: string;
+  createdAt: string;
+}
+
+export interface RunOption {
+  runId: string;
+  workItemKey: string;
+  status: string;
+  createdAt: string;
+  evidenceSource: string;
+}
+
+async function bridgeOr<T>(key: string, fallback: T): Promise<T> {
+  if (standalone) return fallback;
+  try {
+    return await bridgeInvoke<T>(key);
+  } catch {
+    return fallback;
+  }
+}
+
+/** Recent records the current user can see — options for the pickers. */
+export async function recentWorkItems(): Promise<WorkItemOption[]> {
+  const result = await bridgeOr<{ items: WorkItemOption[] }>('recentWorkItems', { items: [] });
+  return result.items ?? [];
+}
+
+export async function recentPages(): Promise<PageOption[]> {
+  const result = await bridgeOr<{ items: PageOption[] }>('recentPages', { items: [] });
+  return result.items ?? [];
+}
+
+export async function recentRuns(): Promise<RunOption[]> {
+  const result = await bridgeOr<{ runs: RunOption[] }>('recentRuns', { runs: [] });
+  return result.runs ?? [];
+}
+
 export async function startCascade(input: {
   workItemKey: string;
   intentText: string;
