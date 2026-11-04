@@ -161,8 +161,8 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
   statements.push({
     text: `INSERT INTO cascade_runs
       (run_id, work_item_key, work_item_ari, failure_at, status, stage, event_json, evidence_source,
-       intent_json, intent_source, spine_json, recommendation_json, stats_json, scope_probe_json,
-       dossier_url, error_code, created_at)
+       counterfactuals_json, intent_json, intent_source, spine_json, recommendation_json, stats_json,
+       scope_probe_json, dossier_url, error_code, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         status = VALUES(status),

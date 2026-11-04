@@ -5,6 +5,13 @@ app:
     memoryMB: 1024
 
 modules:
+  # App-scoped HTTP surface: a plain URL that runs inside the Atlassian runtime
+  # with no user session and no navigation. Used so the product can be tested by
+  # opening a link, rather than by hunting for a module inside the 2026 Jira UI.
+  webtrigger:
+    - key: cascade-webhook
+      function: webhook
+
   jira:issuePanel:
     - key: cascade-panel
       resource: main
@@ -61,6 +68,9 @@ modules:
       label: Cascade
 
   function:
+    - key: webhook
+      handler: webhook.handler
+
     - key: resolver
       handler: resolvers/index.handler
     - key: reconstruct
