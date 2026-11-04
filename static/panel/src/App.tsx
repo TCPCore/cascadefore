@@ -260,13 +260,23 @@ export function App(): JSX.Element {
             ))}
           </nav>
 
-          {tab === 'forensic' && runView?.timeline && (
-            <Forensic
-              timeline={runView.timeline}
-              counterfactuals={runView.counterfactuals ?? []}
-              anchorAt={runView.snapshot?.event.at ?? snapshot.event.at}
-            />
-          )}
+          {tab === 'forensic' &&
+            (runView?.timeline ? (
+              <Forensic
+                timeline={runView.timeline}
+                counterfactuals={runView.counterfactuals ?? []}
+                anchorAt={runView.snapshot?.event.at ?? snapshot.event.at}
+              />
+            ) : (
+              <section className="card">
+                <h2>Forensic view unavailable</h2>
+                <p className="muted">
+                  This run has no timeline attached. The reconstruction itself completed — this is a
+                  read-path problem, not a missing run. Reload the panel; if it persists, the
+                  resolver returned a snapshot without the forensic layer.
+                </p>
+              </section>
+            ))}
           {tab === 'tree' && <DecisionExplorer snapshot={snapshot} />}
           {tab === 'thennow' && <ThenNow snapshot={snapshot} />}
           {tab === 'graft' && <Graft snapshot={snapshot} />}

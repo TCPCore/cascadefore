@@ -6,6 +6,7 @@ import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
 import { buildDecisionReport, findSimilarFor } from '../decisions/service';
 import { loadSeedDecisions } from '../decisions/seed';
+import { buildRunView } from '../actions/runView';
 import type { Horizon, Intent } from '../shared/types';
 
 interface StartPayload {
@@ -101,7 +102,7 @@ resolver.define('getRun', async (request: ResolverRequest<{ runId: string }>) =>
   const snapshot = await repository().get(runId);
   if (!snapshot) return { error: 'NOT_FOUND', message: 'That run no longer exists.' };
 
-  return { snapshot };
+  return buildRunView(snapshot);
 });
 
 /**
