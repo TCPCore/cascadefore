@@ -28,6 +28,8 @@ const EVENT_OPTIONS: Array<{ value: string; label: string }> = [
 
 export function App(): JSX.Element {
   const [issueKey, setIssueKey] = useState('');
+  // A Confluence page id switches the source to the live thread on that page.
+  const [pageId, setPageId] = useState('');
   const [healthState, setHealthState] = useState<Health | null>(null);
   const [intentText, setIntentText] = useState(DEFAULT_GOAL);
   const [horizon, setHorizon] = useState<Horizon>('weeks');
@@ -87,7 +89,13 @@ export function App(): JSX.Element {
     setElapsed(0);
 
     try {
-      const started = await startCascade({ workItemKey: issueKey, intentText, horizon, eventKind });
+      const started = await startCascade({
+        workItemKey: issueKey,
+        intentText,
+        horizon,
+        eventKind,
+        ...(pageId.trim() ? { pageId: pageId.trim() } : {}),
+      });
       if (started.error || !started.runId) {
         setError(started.message ?? started.error ?? 'Cascade could not start.');
         setPhase('error');
@@ -162,6 +170,15 @@ export function App(): JSX.Element {
             value={issueKey}
             placeholder="LEO-47"
             onChange={(event) => setIssueKey(event.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span>Confluence page id (optional — reads the real thread)</span>
+          <input
+            value={pageId}
+            placeholder="2129941"
+            onChange={(event) => setPageId(event.target.value)}
           />
         </label>
 

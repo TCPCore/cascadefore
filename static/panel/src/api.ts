@@ -132,6 +132,8 @@ export async function startCascade(input: {
   intentText: string;
   horizon: Horizon;
   eventKind?: string;
+  /** Optional Confluence page id: reconstruct from that page's real thread. */
+  pageId?: string;
 }): Promise<StartResult> {
   if (standalone) {
     try {

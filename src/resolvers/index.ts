@@ -7,10 +7,14 @@ import { newRunId } from '../shared/ids';
 import { buildDecisionReport, findSimilarFor } from '../decisions/service';
 import { loadSeedDecisions } from '../decisions/seed';
 import { buildRunView } from '../actions/runView';
+import { createConfluenceSource } from '../graph/confluenceThread';
+import api from '@forge/api';
 import type { Horizon, Intent } from '../shared/types';
 
 interface StartPayload {
   workItemKey?: string;
+  /** A Confluence page id: reconstruct the decision from its real thread. */
+  pageId?: string;
   intentText?: string;
   horizon?: Horizon;
 }
@@ -66,6 +70,19 @@ resolver.define('startCascade', async (request: ResolverRequest<StartPayload>) =
   // trade for a seeded demo graph (sub-second) and removes any dependency on
   // queue propagation during a recorded demo. Async remains the default.
   if (process.env.CASCADE_INLINE === 'true') {
+    // A page id switches the source to the live Confluence thread, so the
+    // reconstruction is built from comments a user actually wrote.
+    const pageId = request.payload?.pageId;
+    const deps = pageId
+      ? {
+          ...buildDeps(config),
+          source: createConfluenceSource(pageId, async (path: string) => {
+            const response = await api.asUser().requestConfluence(path as never);
+            return response.json();
+          }),
+        }
+      : buildDeps(config);
+
     const result = await runPipeline(
       {
         runId,
@@ -75,7 +92,7 @@ resolver.define('startCascade', async (request: ResolverRequest<StartPayload>) =
         failureAt: createdAt,
         createdAt,
       },
-      buildDeps(config),
+      deps,
     );
     await repo.save(result.snapshot, result.nodes);
     return { runId };
