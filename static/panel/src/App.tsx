@@ -57,6 +57,12 @@ export function App(): JSX.Element {
           setMode('cases');
           setIssueKey(ctx.issueKey ?? 'dashboard');
         }
+
+        // Full-page surfaces (global page, admin page) have no issue, so there is
+        // nothing to reconstruct by default. Open the case base instead of showing
+        // a disabled Run button and the words "no work item".
+        const key = ctx.extension?.issue?.key ?? ctx.issueKey ?? '';
+        if (!key) setMode('cases');
       })
       .catch(() => setIssueKey(''));
   }, []);

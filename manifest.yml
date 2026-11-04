@@ -17,6 +17,23 @@ modules:
   # visible without hunting through a menu. This is the primary surface.
   # Renders on a dashboard without the user opening an Apps panel, which is the
   # only Jira surface that is discoverable by default in the 2026 work-item view.
+  # Top-navigation surface: appears under Apps in the Jira header, not hidden
+  # behind a work item's sidebar. This is the discoverable entry point.
+  jira:globalPage:
+    - key: cascade-global
+      resource: main
+      resolver:
+        function: resolver
+      title: Cascade
+
+  # Admin surface: Jira Settings → Apps → Cascade. Guaranteed to be findable.
+  jira:adminPage:
+    - key: cascade-admin
+      resource: main
+      resolver:
+        function: resolver
+      title: Cascade
+
   jira:dashboardGadget:
     - key: cascade-decision-health
       resource: main
