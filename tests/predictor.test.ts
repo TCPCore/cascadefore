@@ -228,3 +228,24 @@ describe('path forecast (additive layer)', () => {
     expect(forecastRun([path], [], { wins: 1, trials: 2 })).toEqual([]);
   });
 });
+
+describe('forecast robustness', () => {
+  it('forecasts a path whose stored facts are missing', async () => {
+    const { predictForPath } = await import('../src/domain/forecast');
+    const legacy = { pathId: 'p1', branchId: 'b1', label: 'legacy row' };
+    const forecast = predictForPath(legacy as never, { knowability: 0.5 }, { wins: 1, trials: 2 });
+    expect(Number.isFinite(forecast.prediction.probability)).toBe(true);
+  });
+
+  it('forecasts a path whose facts are partially present', async () => {
+    const { predictForPath } = await import('../src/domain/forecast');
+    const partial = { pathId: 'p2', branchId: 'b2', label: 'partial', facts: { applicability: 1 } };
+    const forecast = predictForPath(partial as never, { knowability: 0.8 }, { wins: 0, trials: 0 });
+    expect(forecast.prediction.probability).toBeGreaterThan(0.5);
+  });
+
+  it('skips paths with no matching score instead of throwing', async () => {
+    const { forecastRun } = await import('../src/domain/forecast');
+    expect(forecastRun([{ pathId: 'p3', branchId: 'b3', label: 'x' }], [], { wins: 0, trials: 0 })).toEqual([]);
+  });
+});

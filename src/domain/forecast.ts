@@ -22,8 +22,25 @@ export interface PrecedentCounts {
 
 export const NO_PRECEDENT: PrecedentCounts = { wins: 0, trials: 0 };
 
-/** Only the fields the forecaster reads — nothing else is required of a path. */
-export type ForecastablePath = Pick<PathCandidate, 'pathId' | 'branchId' | 'label' | 'facts'>;
+/**
+ * Only the fields the forecaster reads — nothing else is required of a path.
+ * `facts` is optional because a run persisted before facts were stored will not
+ * have them, and reading `facts.applicability` off an old row threw.
+ */
+export type ForecastablePath = {
+  pathId: string;
+  branchId: string;
+  label: string;
+  facts?: Partial<PathCandidate['facts']> | null;
+};
+
+const NEUTRAL_FACTS = {
+  migrationCost: 0.5,
+  residualRisk: 0.5,
+  applicability: 0.5,
+  freshness: 0.5,
+  intentFit: 0.5,
+} as const;
 
 export interface PathForecast {
   pathId: string;
@@ -37,6 +54,8 @@ export function predictForPath(
   score: Pick<BranchScore, 'knowability'>,
   precedent: PrecedentCounts,
 ): PathForecast {
+  const facts = { ...NEUTRAL_FACTS, ...(path.facts ?? {}) };
+
   return {
     pathId: path.pathId,
     branchId: path.branchId,
@@ -45,10 +64,10 @@ export function predictForPath(
       precedentWins: precedent.wins,
       precedentTrials: precedent.trials,
       knowability: score.knowability,
-      applicability: path.facts.applicability,
-      freshness: path.facts.freshness,
-      migrationCost: path.facts.migrationCost,
-      intentFit: path.facts.intentFit,
+      applicability: facts.applicability,
+      freshness: facts.freshness,
+      migrationCost: facts.migrationCost,
+      intentFit: facts.intentFit,
     }),
   };
 }

@@ -16,11 +16,18 @@ export function buildRunView(snapshot: RunSnapshotDto) {
   const timeline = buildTimeline(view);
   const asOf = treeAt(view, snapshot.event.at);
 
-  const forecast = forecastRun(
-    snapshot.paths,
-    snapshot.branches.map((b) => ({ branchId: b.id, knowability: b.score.knowability })),
-    NO_PRECEDENT,
-  );
+  let forecast: ReturnType<typeof forecastRun> = [];
+  try {
+    forecast = forecastRun(
+      snapshot.paths,
+      snapshot.branches.map((b) => ({ branchId: b.id, knowability: b.score.knowability })),
+      NO_PRECEDENT,
+    );
+  } catch {
+    // A forecast is additive. It must never be the reason a reconstruction
+    // cannot be read back.
+    forecast = [];
+  }
 
   const recommendation = snapshot.recommendation;
 
