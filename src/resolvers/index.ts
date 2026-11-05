@@ -6,6 +6,7 @@ import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
 import { buildDecisionReport, findSimilarFor } from '../decisions/service';
 import { loadSeedDecisions } from '../decisions/seed';
+import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
 import { buildRunView } from '../actions/runView';
 import { createConfluenceSource } from '../graph/confluenceThread';
 import api, { route } from '@forge/api';
@@ -233,6 +234,14 @@ resolver.define('getRun', async (request: ResolverRequest<{ runId: string }>) =>
  * round-trip are already built and tested (`src/mirror/ingest.ts`); only the
  * REST read is outstanding.
  */
+resolver.define('caseCounterfactuals', async () => {
+  try {
+    return { rows: buildCorpusCounterfactuals(loadSeedDecisions()), error: null };
+  } catch (error) {
+    return { rows: [], error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
 resolver.define('decisionReport', async () => {
   return buildDecisionReport(loadSeedDecisions());
 });

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   getAttribution,
   getDecisionReport,
+  getCaseCounterfactuals,
   getSimilar,
   type AttributionSummary,
   type DecisionReport,
   type DecisionRow,
+  type CaseCounterfactualRow,
   type SimilarRow,
 } from '../api';
 
@@ -21,10 +23,12 @@ export function CaseBase(): JSX.Element {
   const [selected, setSelected] = useState<string | null>(null);
   const [similar, setSimilar] = useState<SimilarRow[]>([]);
   const [attribution, setAttribution] = useState<AttributionSummary | null>(null);
+  const [paths, setPaths] = useState<CaseCounterfactualRow[]>([]);
 
   useEffect(() => {
     void getDecisionReport().then(setReport);
     void getAttribution().then(setAttribution);
+    void getCaseCounterfactuals().then(setPaths).catch(() => setPaths([]));
   }, []);
 
   useEffect(() => {
@@ -175,6 +179,7 @@ export function CaseBase(): JSX.Element {
               open={selected === decision.id}
               onSelect={() => setSelected(selected === decision.id ? null : decision.id)}
               similar={selected === decision.id ? similar : []}
+              paths={selected === decision.id ? paths.filter((p) => p.decisionId === decision.id) : []}
             />
           ))}
         </ul>
@@ -205,11 +210,13 @@ function DecisionItem({
   open,
   onSelect,
   similar,
+  paths,
 }: {
   decision: DecisionRow;
   open: boolean;
   onSelect: () => void;
   similar: SimilarRow[];
+  paths: CaseCounterfactualRow[];
 }): JSX.Element {
   return (
     <li className={`decision ${open ? 'decision--open' : ''}`}>
@@ -239,6 +246,51 @@ function DecisionItem({
               ))}
             </tbody>
           </table>
+
+          {paths.length > 0 && (
+            <>
+              <p className="decision__similar-label">Paths not taken</p>
+              {paths.map((path) => (
+                <article key={`${path.decisionId}-${path.name}`} className="counterfactual">
+                  <h3>{path.name}</h3>
+                  <p className="muted">
+                    Rejected because: <strong>{path.rejectedBecause ?? 'no reason recorded'}</strong>
+                  </p>
+                  <p>{path.summary}</p>
+                  <div className="counterfactual__cols">
+                    <div>
+                      <span className="stat__label">Known at decision time</span>
+                      {path.knownThen.length === 0 ? (
+                        <p className="muted">Nothing — decided on documentation.</p>
+                      ) : (
+                        <ul>
+                          {path.knownThen.map((p) => (
+                            <li key={p.decisionId}>
+                              {p.decisionId} — {p.title} ({p.outcome})
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div>
+                      <span className="stat__label">Learned since</span>
+                      {path.learnedLater.length === 0 ? (
+                        <p className="muted">Nothing observed yet.</p>
+                      ) : (
+                        <ul>
+                          {path.learnedLater.map((p) => (
+                            <li key={p.decisionId}>
+                              {p.decisionId} — {p.title} ({p.outcome})
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </>
+          )}
 
           <p className="decision__similar-label">
             {similar.length > 0 ? 'Similar decisions' : 'No comparable precedent'}

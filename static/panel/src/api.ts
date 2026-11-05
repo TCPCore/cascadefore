@@ -255,6 +255,22 @@ export async function getDecisionReport(): Promise<DecisionReport | null> {
   }
 }
 
+export interface CaseCounterfactualRow {
+  decisionId: string;
+  decision: string;
+  decidedAt: string;
+  name: string;
+  rejectedBecause: string | null;
+  knownThen: Array<{ decisionId: string; title: string; outcome: string }>;
+  learnedLater: Array<{ decisionId: string; title: string; outcome: string }>;
+  summary: string;
+}
+
+export async function getCaseCounterfactuals(): Promise<CaseCounterfactualRow[]> {
+  const result = await bridgeOr<{ rows: CaseCounterfactualRow[] }>('caseCounterfactuals', { rows: [] });
+  return result.rows ?? [];
+}
+
 export async function getSimilar(id: string): Promise<SimilarRow[]> {
   if (standalone) {
     try {

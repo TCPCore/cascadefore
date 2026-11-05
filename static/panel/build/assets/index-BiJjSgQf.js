@@ -1,4 +1,4 @@
-import{a as rt}from"./index-CVhwhl-p.js";function at(ce,M){for(var W=0;W<M.length;W++){const D=M[W];if(typeof D!="string"&&!Array.isArray(D)){for(const X in D)if(X!=="default"&&!(X in ce)){const $=Object.getOwnPropertyDescriptor(D,X);$&&Object.defineProperty(ce,X,$.get?$:{enumerable:!0,get:()=>D[X]})}}}return Object.freeze(Object.defineProperty(ce,Symbol.toStringTag,{value:"Module"}))}var tt={exports:{}};(function(ce){console.info(`
+import{a as rt}from"./index-CBmCb4U4.js";function at(ce,M){for(var W=0;W<M.length;W++){const D=M[W];if(typeof D!="string"&&!Array.isArray(D)){for(const X in D)if(X!=="default"&&!(X in ce)){const $=Object.getOwnPropertyDescriptor(D,X);$&&Object.defineProperty(ce,X,$.get?$:{enumerable:!0,get:()=>D[X]})}}}return Object.freeze(Object.defineProperty(ce,Symbol.toStringTag,{value:"Module"}))}var tt={exports:{}};(function(ce){console.info(`
 IFRAME-RESIZER
 
 Iframe-Resizer 5 is now available via the following two packages:
