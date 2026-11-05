@@ -81,3 +81,22 @@ describe('paths not taken, from decision records', () => {
     expect(rows.every((r) => r.rejectedBecause)).toBe(true);
   });
 });
+
+describe('precedent hygiene', () => {
+  it('never counts a decision as its own precedent', () => {
+    const rows = buildCorpusCounterfactuals(loadSeedDecisions());
+    for (const row of rows) {
+      expect(row.knownThen.some((p) => p.decisionId === row.decisionId)).toBe(false);
+      expect(row.learnedLater.some((p) => p.decisionId === row.decisionId)).toBe(false);
+    }
+  });
+
+  it('does not treat "unknown outcome" as a trial', () => {
+    // 0012 rejected MongoDB with outcome "unknown" — nobody ran that experiment,
+    // so it must not appear as evidence anywhere.
+    const rows = buildCorpusCounterfactuals(loadSeedDecisions());
+    const mongodb = rows.find((r) => /mongodb/i.test(r.name))!;
+    expect(mongodb.knownThen).toHaveLength(0);
+    expect(mongodb.summary).toMatch(/no precedent/i);
+  });
+});

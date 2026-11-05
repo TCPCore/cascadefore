@@ -51,6 +51,7 @@ export function buildCorpusCounterfactuals(decisions: readonly Decision[]): Corp
         evidenceAri: decision.id,
         statedAt: decision.decidedAt,
         knowableAt: decision.decidedAt,
+        ownerDecisionId: decision.id,
       };
 
       const found = findCounterfactual(extracted, corpus, decision.decidedAt);

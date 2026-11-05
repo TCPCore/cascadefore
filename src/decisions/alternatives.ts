@@ -30,6 +30,8 @@ export interface ExtractedAlternative extends Omit<Alternative, 'rejected_becaus
   statedAt: Iso;
   /** The decision time this was knowable at — always ≤ statedAt. */
   knowableAt: Iso;
+  /** The decision that rejected it. A decision is never its own precedent. */
+  ownerDecisionId?: string;
 }
 
 const REJECTION_PATTERNS: Array<{
@@ -189,9 +191,15 @@ export function findCounterfactual(
   const precedents: Precedent[] = [];
 
   for (const candidate of corpus) {
-    // Where did this decision actually try the thing that was rejected here?
+    // A decision cannot be precedent for itself, and "considered but nobody
+    // recorded an outcome" is not a trial. Both mistakes inflate the evidence.
+    if (alternative.ownerDecisionId && candidate.id === alternative.ownerDecisionId) continue;
+
+    const tried = (outcome: string | undefined): boolean =>
+      outcome === 'tried_ok' || outcome === 'tried_bad';
+
     const taken = candidate.alternatives.find(
-      (alt) => sharedTerms(alternative.name, alt.name).length > 0 && alt.outcome !== 'never_tried',
+      (alt) => sharedTerms(alternative.name, alt.name).length > 0 && tried(alt.outcome),
     );
 
     const because = sharedTerms(alternative.name, `${candidate.title} ${candidate.domain.join(' ')}`);
@@ -212,7 +220,7 @@ export function findCounterfactual(
       outcome,
       knowableAtDecisionTime: Date.parse(candidate.decidedAt) <= Date.parse(decisionTime),
       because:
-        taken && triedOutcome && triedOutcome !== 'never_tried'
+        taken && triedOutcome
           ? [`tried ${taken.name}`, `outcome ${triedOutcome.replace('tried_', '')}`]
           : because.map(
               (t) => `shared term "${t}"`,
