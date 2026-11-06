@@ -2,7 +2,7 @@
 name: decision-autopsy
 description: Reconstruct the decision paths behind a failed build or incident in Jira, and report which evidenced alternatives existed at each decision point, scored by what was knowable at the time versus what proved viable since. Use when a user asks why work broke, what else could have been done, or which decisions led to a failure.
 compatibility: Requires the Cascade Forge app installed in Jira with Teamwork Graph scopes granted.
-allowed-tools: search-decisions, why-is-this-like-this, reconstruct-decision, project-tree, find-precedent, decision-matrix
+allowed-tools: search-decisions why-is-this-like-this reconstruct-decision project-tree find-precedent decision-matrix
 ---
 
 # Decision autopsy
