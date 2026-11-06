@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { RunSnapshotDto } from '../../../src/shared/dtos';
 import type { Horizon } from '../../../src/shared/types';
-import { getRun, health, isStandalone, startCascade, type Health, type RunView,
+import {
+  getRun,
+  graphProbe,
+  health,
+  isStandalone,
+  startCascade,
+  type Health,
+  type RunView,
 } from './api';
 import { EmptyState } from './components/EmptyState';
 import { Graft } from './components/Graft';
@@ -21,7 +28,7 @@ import { Projection } from './components/Projection';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
-type Tab = 'tree' | 'thennow' | 'graft';
+type Tab = 'projected' | 'forensic' | 'tree' | 'thennow' | 'graft';
 
 const DEFAULT_GOAL = 'Restore the build this week without adding a new dependency #no-new-dependency';
 

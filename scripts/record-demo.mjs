@@ -31,6 +31,7 @@ const CAPTIONS = [
   { at: 79000, text: 'The forensic timeline dates every entry, and marks what was knowable then.' },
   { at: 85000, text: 'Nothing here predicts. It reports what existed, what was rejected, and what was knowable.' },
   { at: 98000, text: 'Cascade. Plausible output is not evidence — an assertion is.' },
+  { at: 103000, text: '' },
 ];
 
 const browser = await chromium.launch();
@@ -137,6 +138,31 @@ await caption(15);
 await page.waitForTimeout(2600);
 await caption(16);
 await page.waitForTimeout(3000);
+
+// End card: how to try it, on screen long enough to read
+await page.evaluate(() => {
+  const card = document.createElement('div');
+  card.id = 'end-card';
+  card.innerHTML = `
+    <div style="font-size:56px;font-weight:800;letter-spacing:-0.02em;margin-bottom:10px">Cascade</div>
+    <div style="font-size:24px;color:#79f2c0;font-weight:600;margin-bottom:26px">
+      What was decided · what was rejected · what was knowable
+    </div>
+    <div style="font-size:22px;color:#d5e0f5;line-height:1.7">
+      github.com/TCPCore/cascadefore<br/>
+      <span style="color:#9fb4d8">npm run evaluate</span> → localhost:4173
+    </div>`;
+  card.style.cssText = [
+    'position:fixed','inset:0','z-index:100000','display:flex','flex-direction:column',
+    'align-items:center','justify-content:center','text-align:center','color:#fff',
+    'font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif',
+    'background:radial-gradient(circle at 30% 20%, #14406f, #0b1b3a 70%)',
+  ].join(';');
+  document.body.appendChild(card);
+  const caption = document.getElementById('cascade-caption');
+  if (caption) caption.remove();
+});
+await page.waitForTimeout(5200);
 
 await context.close();
 await browser.close();

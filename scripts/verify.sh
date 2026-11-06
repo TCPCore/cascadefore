@@ -14,7 +14,9 @@ echo "· root typecheck"
 npx tsc --noEmit
 
 echo "· panel typecheck"
-npm --prefix static/panel exec tsc -- --noEmit
+# `npm exec` swallows the exit code, which is how two type errors passed this
+# gate. Run tsc directly from the panel directory instead.
+(cd static/panel && npx tsc --noEmit)
 
 echo "· tests"
 npx vitest run --silent
