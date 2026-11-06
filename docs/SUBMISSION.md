@@ -114,6 +114,7 @@ now declared by the data source, and a test asserts a caller cannot relabel it.
 | Types (root + panel) | `npm run verify` | clean |
 | Tests | `npm run verify` | 261 passing |
 | Accessibility | `npm run a11y` | **0 WCAG AA violations** across five views |
+| UI smoke | `npm run smoke` | every tab renders; fails on any console error |
 | Lint / manifest | `forge lint` | clean |
 | CI | `.github/workflows/verify.yml` | runs on every push |
 

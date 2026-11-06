@@ -10,7 +10,7 @@ trust it. Updated 2026-11-06.
 | Claim | Evidence | Checkable by |
 |---|---|---|
 | Suite is green | **261 tests**, 24 files | `npm run verify` |
-| CI enforces it | `.github/workflows/verify.yml` — typecheck, tests, bundles | push to `main` |
+| CI enforces it | `.github/workflows/verify.yml` — typecheck, tests, bundles, smoke, accessibility | push to `main` |
 | Both projects typecheck | root `tsc` **and** panel `tsc` in the gate | `scripts/verify.sh` |
 | Manifest valid | `forge lint` → *No issues found* | `forge lint` |
 | Runs in the Forge runtime | `?action=replay` → pipeline → Forge SQL → read back | production trigger |
@@ -41,6 +41,9 @@ unproven (the app runs on the seeded source, labelled as such).
 | Actions are labelled, never silent | picker failures show an explicit card; the badge names the data source |
 | Judge-facing onboarding | `docs/INSTALL.md`, README screenshots |
 | **Accessibility: zero WCAG AA violations** | axe-core across five views — `npm run a11y` |
+| **No blank-page regressions** | `npm run smoke` drives every tab and asserts it renders; fails on any page error |
+| **Crashes are contained** | `ErrorBoundary` per surface: one broken section, not a white screen |
+| **The gate actually gates** | `verify.sh` runs `tsc` directly from the panel; `npm exec` was swallowing the exit code |
 | Responsive at 390px | `docs/screenshots/06-mobile.png` |
 | Listing hero and video thumbnail | `banner-1280x720.png`, `youtube-thumbnail.png` |
 
