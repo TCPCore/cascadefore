@@ -1287,3 +1287,12 @@ select:focus,
 .projection__alt.is-taken { color: #006644; font-weight: 500; }
 .projection__alt.is-hidden { opacity: 0.6; font-style: italic; }
 .projection__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Decision matrix -------------------------------------------------------- */
+.matrix { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.matrix th, .matrix td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(9, 30, 66, 0.08); }
+.matrix th { font-weight: 600; color: #5e6c84; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+.matrix tfoot td { font-weight: 600; border-top: 2px solid rgba(9, 30, 66, 0.12); }
+.matrix__ok { color: #006644; }
+.matrix__bad { color: #bf2600; font-weight: 600; }
+.matrix__warn { color: #7a5c00; }

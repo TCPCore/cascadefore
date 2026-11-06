@@ -5,8 +5,10 @@ import { loadConfig } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
 import { buildDecisionReport, findSimilarFor } from '../decisions/service';
-import { loadDecisionCorpus, loadSeedDecisions } from '../decisions/seed';
+import { createFixtureExecutors, loadDecisionCorpus, loadSeedDecisions } from '../decisions/seed';
 import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
+import { computeCaseBase } from '../decisions/service';
+import { buildMatrix } from '../decisions/matrix';
 import { buildRunView } from '../actions/runView';
 import { projectTreeFor } from '../actions/projectTree';
 import { createConfluenceSource } from '../graph/confluenceThread';
@@ -249,6 +251,16 @@ resolver.define('projectTree', async (request: ResolverRequest<{
   });
 
   return result.ok ? result.projection : { error: result.error, message: result.message };
+});
+
+resolver.define('decisionMatrix', async (request: ResolverRequest<{ groupBy?: string }>) => {
+  const groupBy = request.payload?.groupBy === 'status' ? 'status' : 'area';
+  try {
+    const { models } = await computeCaseBase(loadSeedDecisions(), createFixtureExecutors());
+    return buildMatrix(models, groupBy);
+  } catch (error) {
+    return { error: 'MATRIX_FAILED', message: error instanceof Error ? error.message : String(error) };
+  }
 });
 
 resolver.define('caseCounterfactuals', async () => {

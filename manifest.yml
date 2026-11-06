@@ -92,6 +92,9 @@ modules:
     - key: find-precedent-fn
       handler: actions/findPrecedent.findPrecedentAction
 
+    - key: decision-matrix-fn
+      handler: actions/decisionMatrix.decisionMatrixAction
+
     - key: get-run-fn
       handler: actions/getRun.getRunAction
     - key: health-fn
@@ -158,6 +161,20 @@ modules:
           required: false
           description: Maximum number of decisions to project
 
+    - key: decision-matrix
+      name: Decision matrix
+      function: decision-matrix-fn
+      actionVerb: GET
+      description: |
+        Aggregate the decision index by area or status: how many decisions hold,
+        how many broke, and how many nobody can check. This is the all-areas view.
+      inputs:
+        groupBy:
+          title: Group by
+          type: string
+          required: false
+          description: area (default) or status
+
     - key: find-precedent
       name: Find precedent
       function: find-precedent-fn
@@ -214,6 +231,7 @@ modules:
         - reconstruct-decision
         - project-tree
         - find-precedent
+        - decision-matrix
         - get-run
 
   rovo:agent:
@@ -229,6 +247,7 @@ modules:
         - reconstruct-decision
         - project-tree
         - find-precedent
+        - decision-matrix
       conversationStarters:
         - Why did this build break?
         - What else could we have done in ADR-014?
@@ -250,6 +269,7 @@ modules:
         - get-run
         - project-tree
         - find-precedent
+        - decision-matrix
         - health
 
   sql:

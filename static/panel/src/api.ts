@@ -309,6 +309,40 @@ export interface CaseCounterfactualRow {
   summary: string;
 }
 
+export interface MatrixRow {
+  group: string;
+  enforced: number;
+  violated: number;
+  orphaned: number;
+  unknown: number;
+  total: number;
+  oldest: string | null;
+  newest: string | null;
+}
+
+export interface DecisionMatrixRow {
+  groupBy: 'area' | 'status';
+  rows: MatrixRow[];
+  totals: { enforced: number; violated: number; orphaned: number; unknown: number; total: number; areas: number; decisions: number };
+  summary: string;
+}
+
+export async function getDecisionMatrix(groupBy: 'area' | 'status' = 'area'): Promise<DecisionMatrixRow | null> {
+  if (standalone) {
+    try {
+      return await jsonFetch<DecisionMatrixRow>(`/api/matrix?groupBy=${groupBy}`);
+    } catch {
+      return null;
+    }
+  }
+  try {
+    const result = await bridgeInvoke<DecisionMatrixRow & { error?: string }>('decisionMatrix', { groupBy });
+    return result?.error ? null : result;
+  } catch {
+    return null;
+  }
+}
+
 export async function getCaseCounterfactuals(): Promise<CaseCounterfactualRow[]> {
   const result = await bridgeOr<{ rows: CaseCounterfactualRow[] }>('caseCounterfactuals', { rows: [] });
   return result.rows ?? [];

@@ -51,6 +51,8 @@ export function CaseBase(): JSX.Element {
 
   return (
     <div className="cases">
+      <Matrix />
+
       <section className="card">
         <header className="card__head">
           <h2>Case base</h2>
