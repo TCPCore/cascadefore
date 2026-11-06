@@ -107,6 +107,16 @@ now declared by the data source, and a test asserts a caller cannot relabel it.
 
 ---
 
+## Quality gates
+
+| Gate | Command | Result |
+|---|---|---|
+| Types (root + panel) | `npm run verify` | clean |
+| Tests | `npm run verify` | 261 passing |
+| Accessibility | `npm run a11y` | **0 WCAG AA violations** across five views |
+| Lint / manifest | `forge lint` | clean |
+| CI | `.github/workflows/verify.yml` | runs on every push |
+
 ## Verified vs unverified
 
 | Capability | Status |

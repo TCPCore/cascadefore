@@ -10,6 +10,7 @@ trust it. Updated 2026-11-06.
 | Claim | Evidence | Checkable by |
 |---|---|---|
 | Suite is green | **261 tests**, 24 files | `npm run verify` |
+| CI enforces it | `.github/workflows/verify.yml` — typecheck, tests, bundles | push to `main` |
 | Both projects typecheck | root `tsc` **and** panel `tsc` in the gate | `scripts/verify.sh` |
 | Manifest valid | `forge lint` → *No issues found* | `forge lint` |
 | Runs in the Forge runtime | `?action=replay` → pipeline → Forge SQL → read back | production trigger |
@@ -38,9 +39,12 @@ unproven (the app runs on the seeded source, labelled as such).
 | Anchored before the decision: nothing existed | `05-projected-before.png` |
 | Actions are labelled, never silent | picker failures show an explicit card; the badge names the data source |
 | Judge-facing onboarding | `docs/INSTALL.md`, README screenshots |
+| **Accessibility: zero WCAG AA violations** | axe-core across five views — `npm run a11y` |
+| Responsive at 390px | `docs/screenshots/06-mobile.png` |
+| Listing hero and video thumbnail | `banner-1280x720.png`, `youtube-thumbnail.png` |
 
-**Known gaps:** no responsive/mobile layout pass; the case base repeats its counts
-in two places (matrix footer and the stats row).
+**Known gaps:** the case base repeats its counts in two places (matrix footer and
+the stats row) — deliberate, since one is per-area and one is the total.
 
 ---
 
