@@ -3,7 +3,8 @@
   --n10: #f7f8f9;
   --n20: #ebecf0;
   --n40: #dfe1e6;
-  --n200: #6b778c;
+  /* #6b778c fails WCAG AA (4.0:1 on white); #5e6c84 is 5.2:1. */
+  --n200: #5e6c84;
   --n500: #42526e;
   --n900: #172b4d;
   --blue: #0052cc;
@@ -193,6 +194,8 @@ select:focus,
 .node__meta code,
 .probe code {
   background: var(--n20);
+  /* Grey chip + muted text is ~4.1:1; code needs the full foreground colour. */
+  color: var(--n900);
   border-radius: 3px;
   padding: 1px 5px;
   font-size: 11px;
@@ -374,7 +377,13 @@ select:focus,
 }
 
 .gap--low {
-  color: var(--n200);
+  color: var(--n500);
+}
+
+/* The selected branch card has a blue wash; muted grey drops below AA on it. */
+.alt--selected .gap--low,
+.alt--selected .muted {
+  color: var(--n500);
 }
 
 .branch__label {
@@ -891,7 +900,7 @@ select:focus,
   font-weight: 600;
   border: none;
   background: transparent;
-  color: var(--n200);
+  color: var(--n500);
   padding: 6px 14px;
   border-radius: 6px;
   cursor: pointer;

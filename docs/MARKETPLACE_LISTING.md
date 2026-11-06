@@ -66,6 +66,16 @@ The same facts are exposed as MCP tools and Rovo actions, so an agent can answer
 
 ---
 
+## Hero assets
+
+| File | Use |
+|---|---|
+| `docs/screenshots/banner-1280x720.png` | Listing banner / hero image |
+| `docs/screenshots/youtube-thumbnail.png` | Video thumbnail |
+
+Both are rendered from HTML (`npm run listing:assets`) so they follow the
+product's own type and colour rather than drifting.
+
 ## Screenshots (in this order)
 
 | # | File | Caption |

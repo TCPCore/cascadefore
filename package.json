@@ -19,7 +19,10 @@
     "render:report": "tsx scripts/render.ts",
     "sandbox": "CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/cascade.db tsx scripts/serve.ts",
     "shots": "node scripts/shoot.mjs",
-    "demo:record": "node scripts/record-demo.mjs"
+    "demo:record": "node scripts/record-demo.mjs",
+    "a11y": "node scripts/a11y.mjs",
+    "listing:assets": "node scripts/listing-assets.mjs",
+    "shots:mobile": "node scripts/mobile-shot.mjs"
   },
   "dependencies": {
     "@forge/api": "^8.4.0",
@@ -33,6 +36,8 @@
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "playwright": "^1.65.0",
+    "@axe-core/playwright": "^4.10.2"
   }
 }
