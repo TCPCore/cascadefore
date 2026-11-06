@@ -69,6 +69,20 @@ Deadline: **22 December 2026, 12:00 PM PT**. Submit at least a day early.
 
 ---
 
+## 4. One screenshot settles two open questions (2 minutes)
+
+Open the app in Jira (**Apps → Cascade**). The header now shows a badge:
+
+| Badge | What it means |
+|---|---|
+| **graph reachable** | the panel can read Teamwork Graph as the user — the bonus claim becomes verified |
+| **graph no user session** | a platform limit; documented, and the product still works on the seeded/thread sources |
+
+Send me a screenshot of the header. That single image answers both "does the
+panel render after the cross-context change?" and "can the panel reach the graph?".
+
+---
+
 ## Optional, if you want the last bonus claimable
 
 **Invoke the Rovo agent once.** Open Rovo in your Atlassian site, look for

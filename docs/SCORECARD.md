@@ -17,6 +17,7 @@ trust it. Updated 2026-11-06.
 | MCP verified end to end | `reconstruct-decision` → SQL → `get-run` on a later call | MCP Inspector |
 | 8 MCP tools | search, why, reconstruct, get-run, project-tree, find-precedent, decision-matrix, health | `tools/list` |
 | Graph reads verified | 6 queries executed; 3 edges rejected and documented | [GRAPH-BOUNDARY.md](GRAPH-BOUNDARY.md) |
+| Graph reachability is now self-reporting | the panel probes Teamwork Graph on load and shows `graph reachable` / `graph no user session` | header badge |
 | Projection is deterministic | same run at 2020 → 0 decisions; at 2026 → 4 in force | `?action=project` |
 | Counterfactual is time-gated | MongoDB → knownThen 0009 (held), learnedLater 0027 (reverted) | `?action=precedent` |
 | Action contract tests | 7 tests hitting the exact handlers MCP calls | `tests/actions.test.ts` |
