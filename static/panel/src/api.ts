@@ -173,6 +173,49 @@ export async function recentRuns(): Promise<RunOption[]> {
   return result.runs ?? [];
 }
 
+export interface ProjectedNodeRow {
+  id: string;
+  title: string;
+  kind: string;
+  decidedAt: string;
+  inForce: boolean;
+  visibleAlternatives: Array<{ id: string; label: string; taken: boolean; gap: number }>;
+  hiddenAlternatives: Array<{ id: string; label: string; evidenceAfter: string }>;
+}
+
+export interface TreeProjectionRow {
+  anchor: { runId: string; workItemKey: string; asOf: string; direction: 'backward' | 'forward' };
+  nodes: ProjectedNodeRow[];
+  edges: Array<{ from: string; to: string; kind: string }>;
+  invisibleAfter: string | null;
+  counts: { nodes: number; visibleAlternatives: number; hiddenAlternatives: number };
+  summary: string;
+}
+
+export async function projectTree(input: {
+  runId: string;
+  asOf?: string;
+  direction?: 'backward' | 'forward';
+  depth?: number;
+}): Promise<TreeProjectionRow | null> {
+  if (standalone) {
+    try {
+      return await jsonFetch<TreeProjectionRow>('/api/project', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      });
+    } catch {
+      return null;
+    }
+  }
+  try {
+    const result = await bridgeInvoke<TreeProjectionRow & { error?: string }>('projectTree', input as never);
+    return result?.error ? null : result;
+  } catch {
+    return null;
+  }
+}
+
 export async function startCascade(input: {
   workItemKey: string;
   intentText: string;

@@ -12,6 +12,8 @@
  *   ?action=cases     — the case base as JSON
  */
 import { repository } from './bootstrap';
+import { projectTreeFor } from './actions/projectTree';
+import { findPrecedentFor } from './actions/findPrecedent';
 import { forgeSqlDriver as sqlDriver } from './storage/forgeDriver';
 import { persistStatements } from './storage/runs';
 import { ensureSchema } from './storage/schema';
@@ -89,6 +91,35 @@ export async function handler(event: { queryParameters?: Record<string, string[]
       }
 
       return json({ ok: true, statements: results });
+    }
+
+    if (action === 'precedent') {
+      return json({
+        ok: true,
+        ...findPrecedentFor({
+          alternativeText: params.alternativeText?.[0],
+          asOf: params.asOf?.[0],
+          area: params.area?.[0],
+        }),
+      });
+    }
+
+    if (action === 'project') {
+      const runId = params.runId?.[0];
+      if (!runId) return json({ ok: false, error: 'runId required' }, 400);
+
+      const result = await projectTreeFor({
+        runId,
+        asOf: params.asOf?.[0],
+        direction: params.direction?.[0],
+        depth: params.depth?.[0],
+      });
+
+      return json(
+        result.ok
+          ? { ok: true, ...result.projection }
+          : { ok: false, error: result.error, message: result.message },
+      );
     }
 
     if (action === 'cases') {

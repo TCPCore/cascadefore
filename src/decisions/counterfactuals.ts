@@ -24,7 +24,7 @@ export interface CorpusCounterfactual {
   summary: string;
 }
 
-function toPrecedent(decision: Decision): PrecedentDecision {
+export function toPrecedent(decision: Decision): PrecedentDecision {
   return {
     id: decision.id,
     title: decision.decision,

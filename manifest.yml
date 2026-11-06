@@ -80,6 +80,9 @@ modules:
     - key: project-tree-fn
       handler: actions/projectTree.projectTreeAction
 
+    - key: find-precedent-fn
+      handler: actions/findPrecedent.findPrecedentAction
+
     - key: get-run-fn
       handler: actions/getRun.getRunAction
     - key: health-fn
@@ -146,6 +149,31 @@ modules:
           required: false
           description: Maximum number of decisions to project
 
+    - key: find-precedent
+      name: Find precedent
+      function: find-precedent-fn
+      actionVerb: GET
+      description: |
+        Find what happened when other decisions took an alternative that was
+        rejected here, split by what was knowable at the original decision time.
+        Use before offering any judgement about a path not taken.
+      inputs:
+        alternativeText:
+          title: Alternative
+          type: string
+          required: true
+          description: The option that was considered, for example MongoDB
+        asOf:
+          title: Decision time
+          type: string
+          required: false
+          description: ISO timestamp of the original decision. Precedent after this is labelled as not knowable then.
+        area:
+          title: Area
+          type: string
+          required: false
+          description: Optional domain filter, for example datastore
+
     - key: get-run
       name: Get reconstruction run
       function: get-run-fn
@@ -176,6 +204,7 @@ modules:
       actions:
         - reconstruct-decision
         - project-tree
+        - find-precedent
         - get-run
 
   rovo:agent:
@@ -190,6 +219,7 @@ modules:
       actions:
         - reconstruct-decision
         - project-tree
+        - find-precedent
       conversationStarters:
         - Why did this build break?
         - What else could we have done in ADR-014?
@@ -210,6 +240,7 @@ modules:
         - reconstruct-decision
         - get-run
         - project-tree
+        - find-precedent
         - health
 
   sql:

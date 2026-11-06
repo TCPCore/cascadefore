@@ -17,6 +17,7 @@ import {
   type WorkItemOption,
 } from './api';
 import { Forensic } from './components/Forensic';
+import { Projection } from './components/Projection';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
@@ -374,10 +375,11 @@ export function App(): JSX.Element {
           <nav className="tabs" aria-label="Views">
             {(
               [
+                ['projected', 'Projected tree'],
                 ['forensic', 'Forensic view'],
                 ['tree', 'Decision tree'],
                 ['thennow', 'Then vs now'],
-                ['graft', 'Recommended path'],
+                ['graft', 'Paths compared'],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -390,6 +392,9 @@ export function App(): JSX.Element {
             ))}
           </nav>
 
+          {tab === 'projected' && (
+            <Projection runId={snapshot.runId} anchorAt={snapshot.event.at} />
+          )}
           {tab === 'forensic' &&
             (runView?.timeline ? (
               <Forensic
