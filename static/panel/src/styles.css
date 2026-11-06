@@ -1299,3 +1299,8 @@ select:focus,
 
 /* Field labels should not wrap mid-word in a header row. */
 .field--inline > span { white-space: nowrap; }
+
+/* Search ---------------------------------------------------------------- */
+.search { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.search__hit { border-left: 2px solid rgba(9, 30, 66, 0.12); padding-left: 10px; }
+.search__head { display: grid; grid-template-columns: 90px 1fr auto; gap: 10px; align-items: center; }

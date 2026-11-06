@@ -95,6 +95,12 @@ modules:
     - key: decision-matrix-fn
       handler: actions/decisionMatrix.decisionMatrixAction
 
+    - key: search-decisions-fn
+      handler: actions/searchDecisions.searchDecisionsAction
+
+    - key: why-fn
+      handler: actions/searchDecisions.whyIsThisLikeThisAction
+
     - key: get-run-fn
       handler: actions/getRun.getRunAction
     - key: health-fn
@@ -160,6 +166,51 @@ modules:
           type: string
           required: false
           description: Maximum number of decisions to project
+
+    - key: search-decisions
+      name: Search decisions
+      function: search-decisions-fn
+      actionVerb: GET
+      description: |
+        Find decisions by text, area or status. Use first when the question is
+        broad ("why does the billing service use Postgres"). Every hit explains
+        why it matched.
+      inputs:
+        text:
+          title: Text
+          type: string
+          required: false
+          description: Words to match, for example Postgres, mongodb, billing
+        area:
+          title: Area
+          type: string
+          required: false
+          description: Domain filter, for example datastore
+        status:
+          title: Status
+          type: string
+          required: false
+          description: enforced, violated, orphaned or unknown
+        limit:
+          title: Limit
+          type: string
+          required: false
+          description: Maximum hits, default 10, cap 25
+
+    - key: why-is-this-like-this
+      name: Why is this like this
+      function: why-fn
+      actionVerb: GET
+      description: |
+        Answer "why is this like this?" for a technology, constraint, issue key or
+        page id by returning the decisions that shaped it and their rationale.
+        Admits plainly when the index cannot explain the subject.
+      inputs:
+        subject:
+          title: Subject
+          type: string
+          required: true
+          description: What to explain, for example Postgres, #no-downtime, ARCH-123
 
     - key: decision-matrix
       name: Decision matrix
@@ -228,6 +279,8 @@ modules:
   automation:actionProvider:
     - key: cascade-automation
       actions:
+        - search-decisions
+        - why-is-this-like-this
         - reconstruct-decision
         - project-tree
         - find-precedent
@@ -244,6 +297,8 @@ modules:
       skills:
         - decision-autopsy
       actions:
+        - search-decisions
+        - why-is-this-like-this
         - reconstruct-decision
         - project-tree
         - find-precedent
@@ -265,6 +320,8 @@ modules:
     - key: cascade-mcp
       name: Cascade
       tools:
+        - search-decisions
+        - why-is-this-like-this
         - reconstruct-decision
         - get-run
         - project-tree

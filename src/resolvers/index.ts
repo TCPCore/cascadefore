@@ -9,6 +9,7 @@ import { createFixtureExecutors, loadDecisionCorpus, loadSeedDecisions } from '.
 import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
 import { computeCaseBase } from '../decisions/service';
 import { buildMatrix } from '../decisions/matrix';
+import { searchDecisions } from '../decisions/search';
 import { buildRunView } from '../actions/runView';
 import { projectTreeFor } from '../actions/projectTree';
 import { createConfluenceSource } from '../graph/confluenceThread';
@@ -251,6 +252,14 @@ resolver.define('projectTree', async (request: ResolverRequest<{
   });
 
   return result.ok ? result.projection : { error: result.error, message: result.message };
+});
+
+resolver.define('searchDecisions', async (request: ResolverRequest<{ text?: string }>) => {
+  try {
+    return await searchDecisions({ text: request.payload?.text ?? '' });
+  } catch (error) {
+    return { error: 'SEARCH_FAILED', message: error instanceof Error ? error.message : String(error), hits: [] };
+  }
 });
 
 resolver.define('decisionMatrix', async (request: ResolverRequest<{ groupBy?: string }>) => {

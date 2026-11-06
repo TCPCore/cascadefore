@@ -18,10 +18,10 @@ panel bundle the Forge app serves.
 
 ## Demo video
 
-`artifacts/video/demo.webm` — 95 seconds, 1080p, captioned, recorded from the
-running product (`node scripts/record-demo.mjs`). Beats: the decision matrix → a
-decision's paths not taken → reconstruction → the tree projected at two anchors →
-the forensic timeline.
+`artifacts/video/demo.webm` — ~100 seconds, 1080p, captioned, recorded from the
+running product (`node scripts/record-demo.mjs`). Beats: ask the index → the
+decision matrix → a decision's paths not taken → reconstruction → the tree
+projected at two anchors → the forensic timeline.
 
 ---
 
@@ -43,8 +43,8 @@ and it reconstructs decisions from the threads teams already wrote and forgot.
 
 | Category | What we can actually show |
 |---|---|
-| **Best Agents** | `rovo:agent` + `rovo:skill` (`decision-autopsy`) declaring four typed actions: `reconstruct-decision`, `project-tree`, `find-precedent`, `decision-matrix`. The agent prompt encodes the counterfactual protocol (never judge a path without precedent; state what was knowable) |
-| **Best app with Atlassian MCP** | ✅ **verified end to end.** `tools/list` → `reconstruct-decision`, `get-run`, `project-tree`, `find-precedent`, `decision-matrix`, `health`. A real call ran the pipeline, wrote Forge SQL, and `get-run` read it back on a later invocation |
+| **Best Agents** | `rovo:agent` + `rovo:skill` (`decision-autopsy`) declaring six typed actions: `search-decisions`, `why-is-this-like-this`, `reconstruct-decision`, `project-tree`, `find-precedent`, `decision-matrix`. The agent prompt encodes the counterfactual protocol (never judge a path without precedent; state what was knowable) |
+| **Best app with Atlassian MCP** | ✅ **verified end to end.** `tools/list` → `search-decisions`, `why-is-this-like-this`, `reconstruct-decision`, `get-run`, `project-tree`, `find-precedent`, `decision-matrix`, `health`. A real call ran the pipeline, wrote Forge SQL, and `get-run` read it back on a later invocation |
 | **Best Teamwork Graph integration** | ✅ read integration verified: `JiraIssue` by ARI, `jira_space_has_jira_work_item`, `ConfluencePage`, `document_has_comments` **with comment bodies**. ⚠️ **Not** outcome attribution — no work-item→build edge exists, so we do not claim it (see [GRAPH-BOUNDARY](GRAPH-BOUNDARY.md)) |
 | **Best Marketplace published app** | Free listing; install-link identity separate from the licensed listing identity — prepared, not yet published |
 
@@ -167,7 +167,7 @@ now declared by the data source, and a test asserts a caller cannot relabel it.
 
 ```
 245 tests · root + panel typecheck clean · forge lint clean
-MCP: 6 tools; one verified round trip (reconstruct → SQL → get-run)
+MCP: 8 tools; one verified round trip (reconstruct → SQL → get-run)
 graph: 6 queries executed, 3 edges rejected
 matrix: 6 decisions across 7 areas — 4 enforced, 1 violated, 1 orphaned
 projection: same run at 2020 → 0 decisions; at 2026 → 4 in force

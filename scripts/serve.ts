@@ -19,6 +19,7 @@ import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
 import { createLiveGraphSource } from '../src/demo/liveGraph';
 import { buildMatrix } from '../src/decisions/matrix';
+import { searchDecisions } from '../src/decisions/search';
 import { buildCorpusCounterfactuals } from '../src/decisions/counterfactuals';
 import { loadDecisionCorpus } from '../src/decisions/seed';
 import { findPrecedentFor } from '../src/actions/findPrecedent';
@@ -300,6 +301,16 @@ const server = createServer((req, res) => {
       (base) => sendJson(res, 200, buildMatrix(base.models, groupBy)),
       (error: unknown) =>
         sendJson(res, 500, { error: 'MATRIX_FAILED', message: error instanceof Error ? error.message : String(error) }),
+    );
+    return;
+  }
+
+  if (url.startsWith('/api/search')) {
+    const text = new URL(url, 'http://localhost').searchParams.get('text') ?? '';
+    void searchDecisions({ text }).then(
+      (result) => sendJson(res, 200, result),
+      (error: unknown) =>
+        sendJson(res, 500, { error: 'SEARCH_FAILED', message: error instanceof Error ? error.message : String(error) }),
     );
     return;
   }

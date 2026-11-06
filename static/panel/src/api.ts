@@ -327,6 +327,42 @@ export interface DecisionMatrixRow {
   summary: string;
 }
 
+export interface SearchHitRow {
+  id: string;
+  decision: string;
+  status: string;
+  decidedAt: string;
+  domain: string[];
+  constraints: string[];
+  rationale: string;
+  alternatives: Array<{ name: string; rejectedBecause: string | null; outcome: string }>;
+  because: string[];
+  score: number;
+}
+
+export async function searchDecisions(text: string): Promise<{ hits: SearchHitRow[]; summary: string }> {
+  const query = text.trim();
+  if (!query) return { hits: [], summary: '' };
+
+  if (standalone) {
+    try {
+      return await jsonFetch(`/api/search?text=${encodeURIComponent(query)}`);
+    } catch {
+      return { hits: [], summary: 'Search is unavailable in this host.' };
+    }
+  }
+
+  try {
+    const result = await bridgeInvoke<{ hits: SearchHitRow[]; summary: string; error?: string }>(
+      'searchDecisions',
+      { text: query } as never,
+    );
+    return result?.error ? { hits: [], summary: result.error } : result;
+  } catch {
+    return { hits: [], summary: 'Search is unavailable in this host.' };
+  }
+}
+
 export async function getDecisionMatrix(groupBy: 'area' | 'status' = 'area'): Promise<DecisionMatrixRow | null> {
   if (standalone) {
     try {

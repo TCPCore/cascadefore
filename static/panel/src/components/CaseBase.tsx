@@ -11,6 +11,7 @@ import {
   type SimilarRow,
 } from '../api';
 import { Matrix } from './Matrix';
+import { Search } from './Search';
 
 /**
  * The case base.
@@ -52,6 +53,8 @@ export function CaseBase(): JSX.Element {
 
   return (
     <div className="cases">
+      <Search />
+
       <Matrix />
 
       <section className="card">

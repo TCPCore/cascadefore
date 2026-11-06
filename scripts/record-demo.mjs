@@ -13,8 +13,10 @@ const OUT = 'artifacts/video/demo.webm';
 
 const CAPTIONS = [
   { at: 0, text: 'Cascade — the decision index for a codebase.' },
-  { at: 4000, text: 'Six decisions. Four still hold. One broke. One nobody can check.' },
-  { at: 9000, text: 'The orphan is reported, not hidden: a decision nobody can test teaches the case base nothing.' },
+  { at: 3500, text: 'Ask it the way people actually ask.' },
+  { at: 6500, text: 'One decision matches, and it tells you why it matched.' },
+  { at: 10000, text: 'Six decisions. Four still hold. One broke. One nobody can check.' },
+  { at: 15000, text: 'The orphan is reported, not hidden: a decision nobody can test teaches the case base nothing.' },
   { at: 15000, text: 'Now open one decision. Postgres as the primary datastore.' },
   { at: 19500, text: 'Rejected: SQLite. No concurrent writers. No precedent existed — decided on documentation.' },
   { at: 25000, text: 'Rejected: MongoDB. Weak ACID at the time.' },
@@ -28,7 +30,7 @@ const CAPTIONS = [
   { at: 73000, text: 'Move the anchor forward and the same tree assembles itself.' },
   { at: 79000, text: 'The forensic timeline dates every entry, and marks what was knowable then.' },
   { at: 85000, text: 'Nothing here predicts. It reports what existed, what was rejected, and what was knowable.' },
-  { at: 91000, text: 'Cascade. Plausible output is not evidence — an assertion is.' },
+  { at: 98000, text: 'Cascade. Plausible output is not evidence — an assertion is.' },
 ];
 
 const browser = await chromium.launch();
@@ -75,13 +77,21 @@ async function caption(index) {
   }, target.text);
 }
 
-// Beat 1 — case base
+// Beat 1 — ask the index, then the case base
 await caption(0);
 await page.getByRole('button', { name: 'Case base' }).click();
-await page.waitForTimeout(1600);
+await page.waitForTimeout(1200);
 await caption(1);
-await page.waitForTimeout(2200);
+const box = page.getByPlaceholder('why does the billing service use Postgres?');
+await box.fill('why does the billing service use Postgres');
+await page.waitForTimeout(400);
+await box.press('Enter');
+await page.waitForTimeout(1400);
 await caption(2);
+await page.waitForTimeout(1800);
+await caption(17);
+await page.waitForTimeout(2400);
+await caption(18);
 
 // Beat 2 — open a decision, show paths not taken
 await caption(3);
