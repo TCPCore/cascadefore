@@ -4,6 +4,25 @@ Everything a reader needs, in the order they will read it. **Every claim here is
 marked as verified or unverified**, and the unverified ones say so in the same
 sentence. A submission that overstates is worse than a smaller true one.
 
+## Evaluation paths
+
+Two ways to check this, in order of effort:
+
+| Path | Needs | What you see |
+|---|---|---|
+| **A — sandbox (60 seconds)** | Node only | `CASCADE_SOURCE=live CASCADE_STORE=sqlite npx tsx scripts/serve.ts` → the full product, no account |
+| **B — installed in Jira** | An Atlassian site | Apps → Cascade → case base, reconstruction, projection |
+
+Details: [INSTALL.md](INSTALL.md). The sandbox runs the *same* engine and the same
+panel bundle the Forge app serves.
+
+## Demo video
+
+`artifacts/video/demo.webm` — 95 seconds, 1080p, captioned, recorded from the
+running product (`node scripts/record-demo.mjs`). Beats: the decision matrix → a
+decision's paths not taken → reconstruction → the tree projected at two anchors →
+the forensic timeline.
+
 ---
 
 ## Name
@@ -24,8 +43,8 @@ and it reconstructs decisions from the threads teams already wrote and forgot.
 
 | Category | What we can actually show |
 |---|---|
-| **Best Agents** | `rovo:agent` + `rovo:skill` (`decision-experience`) with a retrieval protocol; the agent's tools are verified over MCP |
-| **Best app with Atlassian MCP** | ✅ **verified end to end.** `tools/list` → `reconstruct-decision`, `get-run`, `health`; a real call ran the pipeline, wrote Forge SQL, and `get-run` read it back on a later invocation |
+| **Best Agents** | `rovo:agent` + `rovo:skill` (`decision-autopsy`) declaring four typed actions: `reconstruct-decision`, `project-tree`, `find-precedent`, `decision-matrix`. The agent prompt encodes the counterfactual protocol (never judge a path without precedent; state what was knowable) |
+| **Best app with Atlassian MCP** | ✅ **verified end to end.** `tools/list` → `reconstruct-decision`, `get-run`, `project-tree`, `find-precedent`, `decision-matrix`, `health`. A real call ran the pipeline, wrote Forge SQL, and `get-run` read it back on a later invocation |
 | **Best Teamwork Graph integration** | ✅ read integration verified: `JiraIssue` by ARI, `jira_space_has_jira_work_item`, `ConfluencePage`, `document_has_comments` **with comment bodies**. ⚠️ **Not** outcome attribution — no work-item→build edge exists, so we do not claim it (see [GRAPH-BOUNDARY](GRAPH-BOUNDARY.md)) |
 | **Best Marketplace published app** | Free listing; install-link identity separate from the licensed listing identity — prepared, not yet published |
 
@@ -62,6 +81,8 @@ can tell a real thread from a seeded one without trusting the author.
 | Case-based reasoning | Schank & Kolodner, 1983 | not new |
 | Executable case base | — | new: CBR over mechanically observed outcomes |
 | **Decision recovery from prose** | — | new: thread clustering + resolution detection turns a Confluence thread into one decision with positions |
+| **Projected tree** | — | new: the tree is computed from the index at a chosen date, never stored; `invisibleAfter` marks what could not have been known |
+| **Time-gated precedent** | — | new: a rejected alternative is compared against precedent that existed at decision time, separate from what was learned afterwards |
 
 ---
 
@@ -105,7 +126,12 @@ now declared by the data source, and a test asserts a caller cannot relabel it.
 
 ## Honest limitations, stated first
 
-1. **The Jira panel has never mounted.** Zero invocations before MCP proved the app
+0. **The Rovo agent has not been invoked from a chat surface.** Its actions and
+   prompt are deployed and declared, but the only verified agent path is MCP.
+   Treate the agent as declared-and-wired, not field-tested.
+1. **The Jira panel mounted on 2026-11-04** — Apps → Cascade renders the case base.
+   The earlier zero-invocation problem was a stale install at version 2; the app
+   has since been upgraded. Historical note kept for honesty. Zero invocations before MCP proved the app
    runs. The 2026 work-item view hides app surfaces behind a manual "Apps" panel
    ([ECO-1643](https://jira.atlassian.com/browse/ECO-1643), declined). The product
    does not depend on it: MCP and SQL are verified.
@@ -140,9 +166,12 @@ now declared by the data source, and a test asserts a caller cannot relabel it.
 ## Numbers to quote (all checkable in the repo)
 
 ```
-166 tests · tsc clean · forge lint clean
-MCP: 3 tools, one verified round trip (reconstruct → SQL → get-run)
+245 tests · root + panel typecheck clean · forge lint clean
+MCP: 6 tools; one verified round trip (reconstruct → SQL → get-run)
 graph: 6 queries executed, 3 edges rejected
+matrix: 6 decisions across 7 areas — 4 enforced, 1 violated, 1 orphaned
+projection: same run at 2020 → 0 decisions; at 2026 → 4 in force
+precedent: MongoDB @ 2026-03-14 → knownThen 0009 (held), learnedLater 0027 (reverted)
 demo: 1 decision, 3 positions, resolution identified, evidenceSource: real_confluence_thread
 case base: 4 enforced / 1 violated / 1 orphaned, growth 0.80 → 0.667 → 0.714
 ```
