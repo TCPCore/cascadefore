@@ -1,213 +1,89 @@
-# Do this — the five steps only you can do
+# Do this — the three remaining owner actions
 
-Ordered by value per minute. Steps 1–2 are five minutes total and decide the
-submission's shape; step 3 is the video; steps 4–5 are submission and listing.
-
-Values you'll need:
-
-```
-site        https://one-atlas-xoan.atlassian.net
-repo        https://github.com/TCPCore/cascadefore
-app id      1fcb1899-1194-47c1-a794-26e4d3e59e0f
-mcp url     https://mcp.atlassian.com/forge/1fcb1899-1194-47c1-a794-26e4d3e59e0f
-source page https://one-atlas-xoan.atlassian.net/wiki/spaces/MD/pages/2129941
-```
+Everything technical is done and verified. These three need your browser.
 
 ---
 
-> **Development is current: 2.16.0**, deployed 2026-11-03, both Jira and
-> Confluence installs `Up-to-date`. Production is still 2.3.0 and deliberately
-> untouched. The sandbox (`localhost:4173`) runs the same engine.
+## 1. Watch, then upload the demo video (15 minutes)
 
-## Step 1 — Panel check (3 minutes) ← the only unknown left
+File: `artifacts/video/demo.webm` — ~100 seconds, 1080p, captioned.
+Recorded from the running product with `node scripts/record-demo.mjs`.
 
-**Pick an issue that already has history.** Do **not** use `CX-11`; it was created
-an hour before the graph indexed it and has no comments, so it will render empty
-and you won't be able to tell an empty state from a failure.
+Beats: ask the index → decision matrix → paths not taken (with time-gated
+precedent) → reconstruction → the tree projected at two anchors → forensic
+timeline.
 
-Good candidates, all real, all with content:
+**Check before uploading:** captions legible, no dead air, nothing private on
+screen.
 
-```
-https://one-atlas-xoan.atlassian.net/browse/LEO-47
-https://one-atlas-xoan.atlassian.net/browse/SALES-27
-https://one-atlas-xoan.atlassian.net/browse/MC-43
-https://one-atlas-xoan.atlassian.net/browse/MOBL-2
-```
+**Upload:** <https://studio.youtube.com> → Create → Upload videos
 
-### Do this
+- Title: `Decision as Code — Cascade`
+- Visibility: **Public** (Devpost needs a public video; unlisted is usually rejected)
+- Not made for kids
 
-1. Open one of the URLs above.
-2. In the **right-hand sidebar**, find **Apps** (it is collapsed by default in the
-   2026 work-item view).
-3. Click **Apps** → click **Cascade** to expand it.
-4. Open DevTools: **⌥⌘I** → **Network** tab → in the filter box type `invoke`.
-5. Click **Run Cascade** in the panel if a button is visible. If no button is
-   visible, just note what you see.
-6. Look at the requests that appear. Note the **status code** next to the request
-   named `invoke` or `startCascade`.
-
-### Report these two numbers
-
-```
-Mount:    panel visible | no Cascade in Apps | panel blank
-Resolver: 200 | 401 | no request at all
-```
-
-Plus one screenshot of the panel area if it rendered anything at all.
-
-### What each answer means
-
-| Result | Meaning | What I do next |
-|---|---|---|
-| visible + 200 | both gates pass | flip demo mode off, run the real reconstruction, add the panel shot to the video |
-| visible + 401 | panel mounts, no user session in the resolver | record the platform limit; pitch becomes MCP + Rovo + SQL, panel deferred |
-| visible, blank | bundle/iframe problem | fix the resource or the runtime error |
-| no Cascade in Apps | module not registered | reinstall the dev build, retry once |
-| no request at all | the module never loaded | same as above |
+Send me the URL and I will put it in the submission text.
 
 ---
 
-## Step 2 — Refresh the MCP token (optional, 1 minute)
+## 2. Create the Unlisted Marketplace listing (30 minutes)
 
-Only if you want me to run more live MCP checks. The token expires; the consent
-does not have to be redone.
+This does two things: it produces the **judge install link**, and it claims the
+$1,500 *Best Marketplace published app* bonus.
 
-```bash
-npx -y mcp-remote https://mcp.atlassian.com/forge/1fcb1899-1194-47c1-a794-26e4d3e59e0f
-```
+1. <https://developer.atlassian.com/console/myapps/> → select the app
+2. **Distribution** → **Unlisted**
+3. Copy every field from [MARKETPLACE_LISTING.md](MARKETPLACE_LISTING.md)
+4. Upload the five screenshots from `docs/screenshots/`
+5. Submit for review — **a review ticket alone satisfies the bonus category**
+6. Copy the **install link** from the listing and send it to me
 
-Leave it running for ~20 seconds, approve if a browser tab opens, then close it.
-Tell me `token refreshed`.
-
----
-
-## Step 3 — Record the video (60–90 minutes)
-
-The script is shot-by-shot in [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Read it once
-before recording; the beats are timed.
-
-### 3a. Prepare (10 minutes)
-
-Open three things in this order so nothing loads on camera:
-
-```bash
-# Terminal 1 — the sandbox on real recorded data
-cd /Users/tom/Documents/CASCADE
-CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/demo.db npx tsx scripts/serve.ts
-# → http://127.0.0.1:4173
-```
-
-```bash
-# Terminal 2 (separate window, large font) — prove the build fails
-cd /Users/tom/Documents/CASCADE
-npx tsx scripts/run-decisions.ts --dir examples/decision-repo/.decisions --root examples/decision-repo
-# → exit 1, one violated, one orphaned
-```
-
-Browser tabs, in this order:
-
-1. `http://127.0.0.1:4173`
-2. `https://one-atlas-xoan.atlassian.net/wiki/spaces/MD/pages/2129941`
-3. `examples/decision-repo/.decisions/0031-datastore-monitoring.decision` in your editor
-
-Run the case base once so the cache is warm, then reload so it's fresh.
-
-### 3b. Record (20 minutes, expect 2–3 takes)
-
-macOS built-in:
-
-1. **⌘⇧5**
-2. Choose **Record Entire Screen** (or **Record Selected Portion** if you want it
-   tighter).
-3. Click **Options** → **Microphone** → choose your mic if narrating.
-4. Click **Record**. A stop button appears in the menu bar.
-5. Follow the beats in DEMO_SCRIPT.md. Target **2:30**; hard ceiling 3:00.
-6. **⌘⌃Esc** or the menu-bar stop button to finish.
-
-Save to the Desktop.
-
-### 3c. Review before uploading
-
-Watch it once and check:
-
-- [ ] the Confluence comments are legible (Beat 3)
-- [ ] the taken branch reads "Yes, for now…" (Beat 4)
-- [ ] `evidenceSource: real_confluence_thread` is visible (Beat 5)
-- [ ] nothing shows a password, token, or email you don't want public
-- [ ] under 5 minutes
-
-### 3d. Upload (10 minutes)
-
-1. <https://studio.youtube.com> → **Create** → **Upload videos**
-2. Title: `Decision as Code — Codegeist 2026`
-3. Visibility: **Public** (not Unlisted — Devpost rules require a public video;
-   double-check the rules page wording)
-4. Not made for kids → Next through the checks
-5. Copy the URL: `https://youtu.be/…`
-
-Tell me the URL and I'll fold it into the submission text.
+⚠️ Making a Developer Space public is irreversible. **Unlisted is enough.**
 
 ---
 
-## Step 4 — Submit on Devpost (30 minutes)
+## 3. Submit on Devpost (30 minutes)
 
-1. <https://codegeist2026.devpost.com> → **Submit project** (or join the hackathon
-   first if you haven't).
-2. Fill from [SUBMISSION.md](SUBMISSION.md). The fields that matter:
+<https://codegeist2026.devpost.com> → Submit project.
 
 | Field | Value |
 |---|---|
-| Project name | `Decision as Code` |
+| Name | `Decision as Code` |
 | Tagline | Every architecture decision becomes a testable artefact with a lifecycle |
 | Track | **Apps for Software Teams** |
-| Bonus prizes | check **Best Agents**, **Best app with Atlassian MCP**, **Best apps with Teamwork Graph integration**, **Best Marketplace published app** |
+| Bonus | Best Agents · Best app with Atlassian MCP · Best apps with Teamwork Graph integration · Best Marketplace published app |
 | Repo | `https://github.com/TCPCore/cascadefore` |
-| Video | the YouTube URL from step 3 |
-| Built with | Forge, Teamwork Graph, Rovo, MCP, TypeScript, React |
+| Video | the YouTube URL from step 1 |
+| Install link | from step 2 (or point judges at the sandbox) |
 
-3. The "how the technical requirement is met" box — paste this:
+**Evaluation instructions to paste into the form:**
 
-> Built on Forge. Integrates Teamwork Graph (`read:graph:*` object scopes,
-> persisted Cypher), Rovo (`rovo:agent`, `rovo:skill`, `rovo:mcp`) and Jira +
-> Confluence surfaces. Verified over MCP: `reconstruct-decision`, `get-run`,
-> `health` execute in the Forge runtime and persist to Forge SQL.
+> Fastest path (no Atlassian account required):
+> `git clone https://github.com/TCPCore/cascadefore && npm install && npm --prefix static/panel install`
+> `CASCADE_SOURCE=live CASCADE_STORE=sqlite npx tsx scripts/serve.ts` → http://localhost:4173
+>
+> Built with: Forge (Jira + Confluence), Teamwork Graph persisted Cypher,
+> Rovo agent/skill/MCP, Forge SQL.
 
-4. Add the **install link** if asked. If the app isn't shareable yet, say the
-   sandbox is the evaluation path:
-
-> `npm install && CASCADE_SOURCE=live npx tsx scripts/serve.ts` → localhost:4173
-
-5. Save. **Do not submit on the last day** — submit at least 24 hours early so a
-   broken field can be fixed.
+Deadline: **22 December 2026, 12:00 PM PT**. Submit at least a day early.
 
 ---
 
-## Step 5 — Marketplace listing (optional, irreversible)
+## Optional, if you want the last bonus claimable
 
-⚠️ **Publishing a Developer Space cannot be undone**, and it needs a billing
-account with consent. Do this only if you want the fourth bonus category, and
-only after step 4 is submitted.
-
-1. <https://developer.atlassian.com/console/myapps/>
-2. Your space → **Settings**
-3. *Make public on Marketplace* → **Review & publish** → accept the Partner
-   Agreement
-
-Then file a listing for the app. **A review ticket alone satisfies the bonus** —
-you do not need approval.
-
-If you'd rather not: skip it and uncheck that bonus category in step 4. The other
-three stand on their own.
+**Invoke the Rovo agent once.** Open Rovo in your Atlassian site, look for
+**Cascade**, and ask *"why does the billing service use Postgres?"*. If it answers
+with the decision and its rationale, send me a screenshot — that converts
+"declared" into "verified" for the Best Agents category.
 
 ---
 
-## What I need back, in one message
+## What is already done (no action needed)
 
-```
-1. Mount:    panel visible | no Cascade in Apps | panel blank
-2. Resolver: 200 | 401 | no request
-3. Video:    <youtube url>   (or "not yet")
-```
-
-With those I'll update the submission text to match reality and, if the panel
-works, add the screen to the video plan.
+- 261 tests, root + panel typecheck, lint clean, both panel bundles build
+- Deployed to development and production; both installs Up-to-date
+- Live probes: `?action=search`, `?action=why`, `?action=matrix`,
+  `?action=precedent`, `?action=project`, `?action=replay` all return real data
+- MCP verified end to end (8 tools)
+- Screenshots of every view at 1440px and 390px
+- Docs: INSTALL, MARKETPLACE_LISTING, SCORECARD, SUBMISSION, GRAPH-BOUNDARY
