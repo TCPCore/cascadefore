@@ -3,6 +3,15 @@ app:
   runtime:
     name: nodejs22.x
     memoryMB: 1024
+  # Cross-context app: one installation covers both products, so a Rovo agent
+  # installed in Jira can also reach Confluence content. Without this, an
+  # app-based agent only sees its own installation's workspace.
+  compatibility:
+    # Exactly one context may be required; the other is reachable but optional.
+    jira:
+      required: true
+    confluence:
+      required: false
 
 modules:
   # App-scoped HTTP surface: a plain URL that runs inside the Atlassian runtime
