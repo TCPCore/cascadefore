@@ -15,6 +15,7 @@ import { repository } from './bootstrap';
 import { projectTreeFor } from './actions/projectTree';
 import { findPrecedentFor } from './actions/findPrecedent';
 import { decisionMatrixAction } from './actions/decisionMatrix';
+import { searchDecisionsAction, whyIsThisLikeThisAction } from './actions/searchDecisions';
 import { forgeSqlDriver as sqlDriver } from './storage/forgeDriver';
 import { persistStatements } from './storage/runs';
 import { ensureSchema } from './storage/schema';
@@ -92,6 +93,22 @@ export async function handler(event: { queryParameters?: Record<string, string[]
       }
 
       return json({ ok: true, statements: results });
+    }
+
+    if (action === 'search') {
+      return json({
+        ok: true,
+        ...(await searchDecisionsAction({
+          input: { text: params.text?.[0], area: params.area?.[0], status: params.status?.[0] },
+        })),
+      });
+    }
+
+    if (action === 'why') {
+      return json({
+        ok: true,
+        ...(await whyIsThisLikeThisAction({ input: { subject: params.subject?.[0] } })),
+      });
     }
 
     if (action === 'matrix') {
