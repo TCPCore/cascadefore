@@ -49,6 +49,7 @@ export const DDL: string[] = [
   )`,
   `CREATE TABLE IF NOT EXISTS cascade_branches (
     evidence_at_json JSON,
+    links_json JSON,
     run_id VARCHAR(64) NOT NULL,
     branch_id VARCHAR(64) NOT NULL,
     node_id VARCHAR(64) NOT NULL,
@@ -79,6 +80,7 @@ export const COLUMN_MIGRATIONS: string[] = [
   `ALTER TABLE cascade_runs ADD COLUMN evidence_source VARCHAR(32)`,
   `ALTER TABLE cascade_runs ADD COLUMN counterfactuals_json JSON`,
   `ALTER TABLE cascade_branches ADD COLUMN evidence_at_json JSON`,
+  `ALTER TABLE cascade_branches ADD COLUMN links_json JSON`,
 ];
 
 /**

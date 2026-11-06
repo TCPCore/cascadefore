@@ -77,6 +77,9 @@ modules:
       handler: jobs/reconstruct.reconstructHandler
     - key: run-cascade
       handler: actions/runCascade.runCascadeAction
+    - key: project-tree-fn
+      handler: actions/projectTree.projectTreeAction
+
     - key: get-run-fn
       handler: actions/getRun.getRunAction
     - key: health-fn
@@ -113,6 +116,36 @@ modules:
           required: false
           description: One of weeks, quarters or years
 
+    - key: project-tree
+      name: Project decision tree
+      function: project-tree-fn
+      actionVerb: GET
+      description: |
+        Project the decision tree from a stored run, anchored at a chosen date and
+        direction. Returns the decisions in force at that moment, the alternatives
+        that were visible then, and the ones that were not yet knowable.
+      inputs:
+        runId:
+          title: Run id
+          type: string
+          required: true
+          description: The runId returned by reconstruct-decision
+        asOf:
+          title: As of
+          type: string
+          required: false
+          description: ISO timestamp anchoring the projection. Defaults to the failure moment.
+        direction:
+          title: Direction
+          type: string
+          required: false
+          description: backward (how we got here) or forward (what this still binds)
+        depth:
+          title: Depth
+          type: string
+          required: false
+          description: Maximum number of decisions to project
+
     - key: get-run
       name: Get reconstruction run
       function: get-run-fn
@@ -142,6 +175,7 @@ modules:
     - key: cascade-automation
       actions:
         - reconstruct-decision
+        - project-tree
         - get-run
 
   rovo:agent:
@@ -155,6 +189,7 @@ modules:
         - decision-autopsy
       actions:
         - reconstruct-decision
+        - project-tree
       conversationStarters:
         - Why did this build break?
         - What else could we have done in ADR-014?
@@ -174,6 +209,7 @@ modules:
       tools:
         - reconstruct-decision
         - get-run
+        - project-tree
         - health
 
   sql:

@@ -8,6 +8,7 @@ import { buildDecisionReport, findSimilarFor } from '../decisions/service';
 import { loadSeedDecisions } from '../decisions/seed';
 import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
 import { buildRunView } from '../actions/runView';
+import { projectTreeFor } from '../actions/projectTree';
 import { createConfluenceSource } from '../graph/confluenceThread';
 import api, { route } from '@forge/api';
 import type { Horizon, Intent } from '../shared/types';
@@ -234,6 +235,22 @@ resolver.define('getRun', async (request: ResolverRequest<{ runId: string }>) =>
  * round-trip are already built and tested (`src/mirror/ingest.ts`); only the
  * REST read is outstanding.
  */
+resolver.define('projectTree', async (request: ResolverRequest<{
+  runId?: string;
+  asOf?: string;
+  direction?: string;
+  depth?: number;
+}>) => {
+  const result = await projectTreeFor({
+    runId: request.payload?.runId ?? '',
+    asOf: request.payload?.asOf,
+    direction: request.payload?.direction,
+    depth: request.payload?.depth,
+  });
+
+  return result.ok ? result.projection : { error: result.error, message: result.message };
+});
+
 resolver.define('caseCounterfactuals', async () => {
   try {
     return { rows: buildCorpusCounterfactuals(loadSeedDecisions()), error: null };

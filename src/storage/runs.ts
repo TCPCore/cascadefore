@@ -107,6 +107,8 @@ export function buildSnapshot(input: SnapshotInput): RunSnapshotDto {
     evidenceAt: ((branch as unknown as { evidence?: Array<{ createdAt: string }> }).evidence ?? []).map(
       (e) => e.createdAt,
     ),
+    downstreamNodeIds: ((branch as unknown as { downstreamNodeIds?: string[] }).downstreamNodeIds ?? []).slice(),
+    unwindsNodeIds: ((branch as unknown as { unwindsNodeIds?: string[] }).unwindsNodeIds ?? []).slice(),
     projection: projection ?? null,
     consequence: consequence ?? [],
   }));
@@ -243,11 +245,15 @@ export function persistStatements(snapshot: RunSnapshotDto, nodes: readonly Deci
 
   snapshot.branches.forEach((branch, index) => {
     statements.push({
-      text: `INSERT INTO cascade_branches (evidence_at_json, run_id, branch_id, node_id, label, taken, score_json)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+      text: `INSERT INTO cascade_branches (evidence_at_json, links_json, run_id, branch_id, node_id, label, taken, score_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE label = VALUES(label), score_json = VALUES(score_json)`,
       params: [
         JSON.stringify(branch.evidenceAt ?? []),
+        JSON.stringify({
+          downstreamNodeIds: branch.downstreamNodeIds ?? [],
+          unwindsNodeIds: branch.unwindsNodeIds ?? [],
+        }),
         snapshot.runId,
         branch.id,
         branch.nodeId,
@@ -320,6 +326,7 @@ export interface BranchRow {
   taken: number;
   score_json: unknown;
   evidence_at_json?: unknown;
+  links_json?: unknown;
 }
 
 export interface PathRow {
@@ -392,6 +399,8 @@ export function hydrate(
       score,
       evidenceArIs: [...score.knowableEvidenceAris, ...score.withheldEvidenceAris],
       evidenceAt: parseJson<string[]>(b.evidence_at_json, []),
+      downstreamNodeIds: parseJson<{ downstreamNodeIds?: string[] }>(b.links_json, {}).downstreamNodeIds ?? [],
+      unwindsNodeIds: parseJson<{ unwindsNodeIds?: string[] }>(b.links_json, {}).unwindsNodeIds ?? [],
       projection,
       consequence,
     };

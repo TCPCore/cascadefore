@@ -34,6 +34,10 @@ export interface BranchViewDto {
   evidenceArIs: string[];
   /** Timestamps aligned to evidenceArIs. */
   evidenceAt?: string[];
+  /** Decisions this branch keeps alive (forward projection). */
+  downstreamNodeIds?: string[];
+  /** Spine segments this branch would unwind if taken. */
+  unwindsNodeIds?: string[];
   /** What happens if this branch is taken. Evidence + arithmetic only. */
   projection: Projection | null;
   /** Plain-language forward consequences: what survives, what is undone, cost. */
