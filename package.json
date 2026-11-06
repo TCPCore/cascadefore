@@ -9,14 +9,17 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:panel": "npm --prefix static/panel run build",
-    "verify": "npm run typecheck && npm test && npm run build:panel",
+    "verify": "bash scripts/verify.sh",
     "lint": "forge lint",
     "deploy": "forge deploy",
     "install:app": "forge install",
     "register:queries": "forge invoke --function register-queries",
     "build:web": "npm --prefix static/panel run build:web",
     "serve:web": "npm run build:web && tsx scripts/serve.ts",
-    "render:report": "tsx scripts/render.ts"
+    "render:report": "tsx scripts/render.ts",
+    "sandbox": "CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/cascade.db tsx scripts/serve.ts",
+    "shots": "node scripts/shoot.mjs",
+    "demo:record": "node scripts/record-demo.mjs"
   },
   "dependencies": {
     "@forge/api": "^8.4.0",
