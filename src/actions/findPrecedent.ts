@@ -1,6 +1,6 @@
 import { findCounterfactual, type ExtractedAlternative } from '../decisions/alternatives';
 import { toPrecedent } from '../decisions/counterfactuals';
-import { loadSeedDecisions } from '../decisions/seed';
+import { loadDecisionCorpus } from '../decisions/seed';
 
 /**
  * The counterfactual primitive.
@@ -52,7 +52,7 @@ export function findPrecedentFor(request: PrecedentRequest): PrecedentResult {
     };
   }
 
-  const corpus = loadSeedDecisions()
+  const corpus = loadDecisionCorpus()
     .filter((decision) => !request.area || decision.domain.includes(request.area))
     .map(toPrecedent);
 

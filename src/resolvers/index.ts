@@ -5,7 +5,7 @@ import { loadConfig } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
 import { buildDecisionReport, findSimilarFor } from '../decisions/service';
-import { loadSeedDecisions } from '../decisions/seed';
+import { loadDecisionCorpus, loadSeedDecisions } from '../decisions/seed';
 import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
 import { buildRunView } from '../actions/runView';
 import { projectTreeFor } from '../actions/projectTree';
@@ -253,7 +253,7 @@ resolver.define('projectTree', async (request: ResolverRequest<{
 
 resolver.define('caseCounterfactuals', async () => {
   try {
-    return { rows: buildCorpusCounterfactuals(loadSeedDecisions()), error: null };
+    return { rows: buildCorpusCounterfactuals(loadDecisionCorpus()), error: null };
   } catch (error) {
     return { rows: [], error: error instanceof Error ? error.message : String(error) };
   }

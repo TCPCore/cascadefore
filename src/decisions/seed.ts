@@ -20,7 +20,72 @@ const FIXTURE_FILES: Record<string, string> = {
   'config/session.yml': `driver: redis\nhost: cache-01\n`,
   'infra/kafka/topics.yaml': `topics:\n  - name: ledger.events\n    partitions: 12\n`,
   'src/db/repository.ts': `export function save(row) {\n  db.query('INSERT INTO ledger (id, amount) VALUES (?, ?)', row);\n}\n`,
+  'infra/audit/mongo.yaml': `image: mongo:7\nreplicaSet: audit-rs\n`,
+  'infra/ledger/mongo.yaml': `image: postgres:16\n`,
 };
+
+
+/**
+ * Precedent for the MongoDB alternative rejected in 0012.
+ *
+ * These two exist so the counterfactual layer has something real to compare
+ * against: one organisation-wide attempt that held, and one that had to be
+ * reverted. They are seeded data and every surface labels them
+ * `seeded_fixture` — the mechanism being demonstrated is the time gate, not the
+ * provenance of these rows.
+ */
+const D0009 = `
+id: 0009-mongodb-for-audit-logs
+decision: Use MongoDB for audit log ingestion
+decided_at: 2025-11-10T09:00:00Z
+decided_by: [dana@example.com]
+domain: [datastore, audit]
+constraints: ["#no-downtime"]
+rationale: |
+  Audit logs are append-only, high volume and never joined. The team accepted
+  eventual consistency here because nothing downstream reads them transactionally.
+alternatives:
+  - name: MongoDB
+    rejected_because: n/a — this record took the MongoDB path
+    outcome: tried_ok
+tests:
+  - name: audit store image is mongo
+    kind: file_match
+    target: infra/audit/mongo.yaml
+    pattern: 'image: mongo:'
+    on_fail: The audit store changed engine. If intentional, update this record.
+evidence:
+  links:
+    - type: jira_issue
+      key: ARCH-090
+`;
+
+const D0027 = `
+id: 0027-mongodb-for-ledger
+decision: Move the ledger to MongoDB for write throughput
+decided_at: 2026-05-20T11:30:00Z
+decided_by: [erin@example.com]
+domain: [datastore, persistence]
+constraints: ["#acid-required"]
+rationale: |
+  Write throughput was the constraint of the quarter, and the team expected the
+  ledger to tolerate document storage. It did not: reconciliation depends on
+  multi-row transactions, and the migration was reverted.
+alternatives:
+  - name: MongoDB
+    rejected_because: reverted after two months — reconciliation needs transactions
+    outcome: tried_bad
+tests:
+  - name: ledger store is not mongo
+    kind: file_match
+    target: infra/ledger/mongo.yaml
+    pattern: 'image: postgres:'
+    on_fail: The ledger moved to the document store again. If intentional, update this record.
+evidence:
+  links:
+    - type: jira_issue
+      key: ARCH-144
+`;
 
 const D0012 = `
 id: 0012-use-postgres-primary
@@ -129,6 +194,26 @@ tests:
 `;
 
 export const SEED_DOCUMENTS = [D0012, D0018, D0023, D0031, D0044, D0055];
+
+/**
+ * Precedent records — a separate slice, deliberately.
+ *
+ * The six decisions above are arranged so the growth curve tells a story
+ * (three hold, one breaks, one recovers, one orphaned does not move the curve).
+ * Adding records to that array would silently change every number the demo
+ * shows. So the two MongoDB precedents live here instead, and only the
+ * counterfactual layer reads them.
+ */
+export const PRECEDENT_DOCUMENTS = [D0009, D0027];
+
+/** Everything the counterfactual layer may reason over: narrative corpus + precedent. */
+export function loadDecisionCorpus(): Decision[] {
+  return [...loadSeedDecisions(), ...loadPrecedentDecisions()];
+}
+
+export function loadPrecedentDecisions(): Decision[] {
+  return PRECEDENT_DOCUMENTS.map((document) => parseDecision(document));
+}
 
 export function loadSeedDecisions(): Decision[] {
   return SEED_DOCUMENTS.map(parseDecision);

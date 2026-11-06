@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildCorpusCounterfactuals } from '../src/decisions/counterfactuals';
-import { loadSeedDecisions } from '../src/decisions/seed';
+import { loadDecisionCorpus } from '../src/decisions/seed';
 
 describe('paths not taken, from decision records', () => {
-  const corpus = loadSeedDecisions();
+  const corpus = loadDecisionCorpus();
 
   it('finds the rejections the records actually carry', () => {
     const rows = buildCorpusCounterfactuals(corpus);
@@ -84,19 +84,22 @@ describe('paths not taken, from decision records', () => {
 
 describe('precedent hygiene', () => {
   it('never counts a decision as its own precedent', () => {
-    const rows = buildCorpusCounterfactuals(loadSeedDecisions());
+    const rows = buildCorpusCounterfactuals(loadDecisionCorpus());
     for (const row of rows) {
       expect(row.knownThen.some((p) => p.decisionId === row.decisionId)).toBe(false);
       expect(row.learnedLater.some((p) => p.decisionId === row.decisionId)).toBe(false);
     }
   });
 
-  it('does not treat "unknown outcome" as a trial', () => {
-    // 0012 rejected MongoDB with outcome "unknown" — nobody ran that experiment,
-    // so it must not appear as evidence anywhere.
-    const rows = buildCorpusCounterfactuals(loadSeedDecisions());
-    const mongodb = rows.find((r) => /mongodb/i.test(r.name))!;
-    expect(mongodb.knownThen).toHaveLength(0);
-    expect(mongodb.summary).toMatch(/no precedent/i);
+  it('treats only tried outcomes as precedent, and splits them by the time gate', () => {
+    // 0012 rejected MongoDB (outcome "unknown") at 2026-03-14. The audit-log
+    // decision took MongoDB before that and held; the ledger migration took it
+    // after and was reverted. "Unknown" itself is never evidence.
+    const rows = buildCorpusCounterfactuals(loadDecisionCorpus());
+    const mongodb = rows.find((r) => r.decisionId === '0012-use-postgres-primary' && /mongodb/i.test(r.name))!;
+
+    expect(mongodb.knownThen.map((p) => p.decisionId)).toEqual(['0009-mongodb-for-audit-logs']);
+    expect(mongodb.learnedLater.map((p) => p.decisionId)).toEqual(['0027-mongodb-for-ledger']);
+    expect(mongodb.summary).toMatch(/already had 1 precedent/i);
   });
 });
