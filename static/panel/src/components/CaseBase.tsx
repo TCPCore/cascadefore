@@ -10,6 +10,7 @@ import {
   type CaseCounterfactualRow,
   type SimilarRow,
 } from '../api';
+import { Matrix } from './Matrix';
 
 /**
  * The case base.

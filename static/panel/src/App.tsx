@@ -226,7 +226,7 @@ export function App(): JSX.Element {
 
       {mode === 'run' && (
       <>
-      {pickersLoaded && pickerError && (
+      {pickersLoaded && pickerError && !isStandalone && (
         <section className="card card--warnbox">
           <h2>Recent records unavailable</h2>
           <p className="muted">{pickerError}</p>

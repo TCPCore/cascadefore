@@ -8,3 +8,6 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Recorded demo artefacts (large binaries); regenerate with scripts/record-demo.mjs
+artifacts/video/

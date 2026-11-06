@@ -14,6 +14,7 @@
 import { repository } from './bootstrap';
 import { projectTreeFor } from './actions/projectTree';
 import { findPrecedentFor } from './actions/findPrecedent';
+import { decisionMatrixAction } from './actions/decisionMatrix';
 import { forgeSqlDriver as sqlDriver } from './storage/forgeDriver';
 import { persistStatements } from './storage/runs';
 import { ensureSchema } from './storage/schema';
@@ -91,6 +92,10 @@ export async function handler(event: { queryParameters?: Record<string, string[]
       }
 
       return json({ ok: true, statements: results });
+    }
+
+    if (action === 'matrix') {
+      return json({ ok: true, ...(await decisionMatrixAction({ input: { groupBy: params.groupBy?.[0] } })) });
     }
 
     if (action === 'precedent') {

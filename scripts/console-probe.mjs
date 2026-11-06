@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const page = await browser.newPage();
+page.on('console', (m) => console.log('CONSOLE', m.type(), m.text().slice(0, 300)));
+page.on('pageerror', (e) => console.log('PAGEERROR', String(e).slice(0, 400)));
+await page.goto(process.env.BASE ?? 'http://127.0.0.1:4199', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+await page.getByRole('button', { name: 'Case base' }).click().catch((e) => console.log('CLICKFAIL', String(e).slice(0,120)));
+await page.waitForTimeout(1500);
+await browser.close();

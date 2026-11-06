@@ -17,10 +17,14 @@ describe('decision matrix', () => {
     }
   });
 
-  it('totals match the corpus', () => {
+  it('totals count each decision once, even when it spans several areas', () => {
     const matrix = buildMatrix(decisions, 'area');
     expect(matrix.totals.decisions).toBe(decisions.length);
-    expect(matrix.totals.total).toBeGreaterThanOrEqual(decisions.length); // multi-area decisions count twice
+    expect(
+      matrix.totals.enforced + matrix.totals.violated + matrix.totals.orphaned + matrix.totals.unknown,
+    ).toBe(decisions.length);
+    // Rows may double count; totals may not.
+    expect(matrix.rows.reduce((n, r) => n + r.total, 0)).toBeGreaterThanOrEqual(decisions.length);
   });
 
   it('reports the oldest and newest decision in each group', () => {

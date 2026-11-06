@@ -18,6 +18,12 @@ import { fileURLToPath } from 'node:url';
 import { runPipeline } from '../src/pipeline/run';
 import { createDemoSource } from '../src/demo/seedSource';
 import { createLiveGraphSource } from '../src/demo/liveGraph';
+import { buildMatrix } from '../src/decisions/matrix';
+import { buildCorpusCounterfactuals } from '../src/decisions/counterfactuals';
+import { loadDecisionCorpus } from '../src/decisions/seed';
+import { findPrecedentFor } from '../src/actions/findPrecedent';
+import { projectTree } from '../src/domain/treeProjection';
+import { buildRunView } from '../src/actions/runView';
 import { createGraphSource } from '../src/graph/source';
 import { createRecordedCaller, SANDBOX_ATTRIBUTION_PAGES, SANDBOX_PAGES } from '../src/graph/sandbox';
 import { runPersistedQuery } from '../src/graph/client';
@@ -216,6 +222,41 @@ async function handleRun(req: IncomingMessage, res: ServerResponse): Promise<voi
   }
 }
 
+/**
+ * Projection route for the standalone host, so the panel's as-of control can be
+ * exercised (and screenshotted) without a Forge runtime.
+ */
+function handleProjection(req: IncomingMessage, res: ServerResponse): void {
+  let body = '';
+  req.on('data', (chunk) => {
+    body += String(chunk);
+  });
+  req.on('end', () => {
+    void (async () => {
+      try {
+        const parsed = JSON.parse(body || '{}') as { runId?: string; asOf?: string; direction?: string; depth?: number };
+        const snapshot = parsed.runId ? runs.get(parsed.runId) : undefined;
+        if (!snapshot) {
+          sendJson(res, 404, { error: 'NOT_FOUND', message: 'No such run.' });
+          return;
+        }
+        sendJson(
+          res,
+          200,
+          projectTree({
+            snapshot,
+            asOf: parsed.asOf,
+            direction: parsed.direction === 'forward' ? 'forward' : 'backward',
+            depth: parsed.depth,
+          }),
+        );
+      } catch (error) {
+        sendJson(res, 500, { error: 'PROJECTION_FAILED', message: error instanceof Error ? error.message : String(error) });
+      }
+    })();
+  });
+}
+
 const server = createServer((req, res) => {
   const url = req.url ?? '/';
 
@@ -249,6 +290,45 @@ const server = createServer((req, res) => {
         summary: summariseAttribution(attributeFromRows(result.rows)),
       });
     })();
+    return;
+  }
+
+  if (url.startsWith('/api/matrix')) {
+    const groupBy = new URL(url, 'http://localhost').searchParams.get('groupBy') === 'status' ? 'status' : 'area';
+    // Executed decisions: a status only exists after the runner has run the tests.
+    void computeCaseBase().then(
+      (base) => sendJson(res, 200, buildMatrix(base.models, groupBy)),
+      (error: unknown) =>
+        sendJson(res, 500, { error: 'MATRIX_FAILED', message: error instanceof Error ? error.message : String(error) }),
+    );
+    return;
+  }
+
+  if (url === '/api/counterfactuals') {
+    try {
+      sendJson(res, 200, { rows: buildCorpusCounterfactuals(loadDecisionCorpus()) });
+    } catch (error) {
+      sendJson(res, 500, { error: 'COUNTERFACTUALS_FAILED', message: error instanceof Error ? error.message : String(error) });
+    }
+    return;
+  }
+
+  if (url.startsWith('/api/precedent')) {
+    const params = new URL(url, 'http://localhost').searchParams;
+    sendJson(
+      res,
+      200,
+      findPrecedentFor({
+        alternativeText: params.get('alternativeText') ?? undefined,
+        asOf: params.get('asOf') ?? undefined,
+        area: params.get('area') ?? undefined,
+      }),
+    );
+    return;
+  }
+
+  if (url === '/api/project' && req.method === 'POST') {
+    void handleProjection(req, res);
     return;
   }
 
@@ -294,7 +374,7 @@ const server = createServer((req, res) => {
       sendJson(res, 404, { error: 'NOT_FOUND', message: 'That run no longer exists.' });
       return;
     }
-    sendJson(res, 200, { snapshot });
+    sendJson(res, 200, buildRunView(snapshot));
     return;
   }
 

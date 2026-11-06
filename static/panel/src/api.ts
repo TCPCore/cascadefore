@@ -344,6 +344,14 @@ export async function getDecisionMatrix(groupBy: 'area' | 'status' = 'area'): Pr
 }
 
 export async function getCaseCounterfactuals(): Promise<CaseCounterfactualRow[]> {
+  if (standalone) {
+    try {
+      const result = await jsonFetch<{ rows: CaseCounterfactualRow[] }>('/api/counterfactuals');
+      return result.rows ?? [];
+    } catch {
+      return [];
+    }
+  }
   const result = await bridgeOr<{ rows: CaseCounterfactualRow[] }>('caseCounterfactuals', { rows: [] });
   return result.rows ?? [];
 }

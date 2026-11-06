@@ -1296,3 +1296,6 @@ select:focus,
 .matrix__ok { color: #006644; }
 .matrix__bad { color: #bf2600; font-weight: 600; }
 .matrix__warn { color: #7a5c00; }
+
+/* Field labels should not wrap mid-word in a header row. */
+.field--inline > span { white-space: nowrap; }

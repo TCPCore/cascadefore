@@ -74,12 +74,18 @@ export function buildMatrix(
 
   const list = [...rows.values()].sort((a, b) => b.total - a.total || a.group.localeCompare(b.group));
 
+  // Rows sum by area and can double count a decision with several domains; the
+  // totals must not. They are counted once, from the decisions themselves.
+  const statusCount = (status: DecisionStatus) =>
+    decisions.filter((decision) => (STATUSES.includes(decision.status) ? decision.status : 'unknown') === status)
+      .length;
+
   const totals = {
-    enforced: list.reduce((n, r) => n + r.enforced, 0),
-    violated: list.reduce((n, r) => n + r.violated, 0),
-    orphaned: list.reduce((n, r) => n + r.orphaned, 0),
-    unknown: list.reduce((n, r) => n + r.unknown, 0),
-    total: list.reduce((n, r) => n + r.total, 0),
+    enforced: statusCount('enforced'),
+    violated: statusCount('violated'),
+    orphaned: statusCount('orphaned'),
+    unknown: statusCount('unknown'),
+    total: decisions.length,
     oldest: list.reduce<string | null>(
       (oldest, r) => (!oldest || (r.oldest && Date.parse(r.oldest) < Date.parse(oldest)) ? r.oldest : oldest),
       null,
