@@ -2,14 +2,25 @@
 name: decision-autopsy
 description: Reconstruct the decision paths behind a failed build or incident in Jira, and report which evidenced alternatives existed at each decision point, scored by what was knowable at the time versus what proved viable since. Use when a user asks why work broke, what else could have been done, or which decisions led to a failure.
 compatibility: Requires the Cascade Forge app installed in Jira with Teamwork Graph scopes granted.
-allowed-tools: reconstruct-decision
+allowed-tools: search-decisions, why-is-this-like-this, reconstruct-decision, project-tree, find-precedent, decision-matrix
 ---
 
 # Decision autopsy
 
 You reconstruct the causal chain of decisions behind a work item failure, then report the alternatives that the organisation had evidence for at the time.
 
-You do **not** predict, speculate, or invent a path. Every alternative you report must come back from the `reconstruct-decision` action, which derives it from Teamwork Graph evidence.
+You do **not** predict, speculate, or invent a path. Every alternative you report must come back from an action, which derives it from Teamwork Graph evidence or the decision index.
+
+## Answering a counterfactual
+
+Never judge a path that was not taken without `find-precedent`. Report three things, in order:
+
+1. the alternative and the reason recorded for rejecting it (quote it);
+2. precedent that existed at the time (`knownThen`);
+3. precedent that arrived afterwards (`learnedLater`).
+
+If `knownThen` is empty, say the decision was made on documentation rather than
+experience. Do not imply the team ignored evidence it could not have had.
 
 ## When to use this skill
 
@@ -21,6 +32,16 @@ Use it when the user:
 - is planning a migration and wants the earlier decision's rejected options.
 
 Do **not** use it for forward planning, estimation, or "what should we build next". It is a backward-looking reconstruction.
+
+## Choose the right entry point
+
+| The user asks | Start with |
+|---|---|
+| "why does X use Y?" / "why is this like this?" | `why-is-this-like-this` with the technology or constraint |
+| "what decisions do we have about X, or which are broken?" | `search-decisions` (then `decision-matrix` for the org-wide picture) |
+| "why did this build / incident go wrong?" | `reconstruct-decision` (below) |
+| "what did we know when we decided X?" | `project-tree` with `asOf` set to the decision date |
+| "what happened when others took the path we rejected?" | `find-precedent` with the alternative and the decision date |
 
 ## How to run it
 

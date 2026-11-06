@@ -25,6 +25,7 @@ import {
 } from './api';
 import { Forensic } from './components/Forensic';
 import { Projection } from './components/Projection';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { DecisionExplorer } from './components/DecisionExplorer';
 
 type Phase = 'idle' | 'working' | 'done' | 'error';
@@ -240,7 +241,11 @@ export function App(): JSX.Element {
         </button>
       </nav>
 
-      {mode === 'cases' && <CaseBase />}
+      {mode === 'cases' && (
+        <ErrorBoundary label="Case base">
+          <CaseBase />
+        </ErrorBoundary>
+      )}
 
       {mode === 'run' && (
       <>
@@ -411,8 +416,11 @@ export function App(): JSX.Element {
           </nav>
 
           {tab === 'projected' && (
-            <Projection runId={snapshot.runId} anchorAt={snapshot.event.at} />
+            <ErrorBoundary label="Projected tree">
+              <Projection runId={snapshot.runId} anchorAt={snapshot.event.at} />
+            </ErrorBoundary>
           )}
+          <ErrorBoundary label="This view">
           {tab === 'forensic' &&
             (runView?.timeline ? (
               <Forensic
@@ -433,6 +441,7 @@ export function App(): JSX.Element {
           {tab === 'tree' && <DecisionExplorer snapshot={snapshot} />}
           {tab === 'thennow' && <ThenNow snapshot={snapshot} />}
           {tab === 'graft' && <Graft snapshot={snapshot} />}
+          </ErrorBoundary>
 
           <footer className="foot">
             <span className="muted">

@@ -23,7 +23,8 @@
     "a11y": "node scripts/a11y.mjs",
     "listing:assets": "node scripts/listing-assets.mjs",
     "shots:mobile": "node scripts/mobile-shot.mjs",
-    "evaluate": "bash scripts/evaluate.sh"
+    "evaluate": "bash scripts/evaluate.sh",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@forge/api": "^8.4.0",

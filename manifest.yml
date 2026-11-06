@@ -304,8 +304,9 @@ modules:
         - find-precedent
         - decision-matrix
       conversationStarters:
-        - Why did this build break?
-        - What else could we have done in ADR-014?
+        - Why does the billing service use Postgres?
+        - Which decisions no longer hold, and in which areas?
+        - What did we know when we chose this?
         - Show me the paths we did not take
 
   rovo:skill:
@@ -314,7 +315,12 @@ modules:
         dir: skills/decision-autopsy
       dependencies:
         tools:
+          - search-decisions
+          - why-is-this-like-this
           - reconstruct-decision
+          - project-tree
+          - find-precedent
+          - decision-matrix
 
   rovo:mcp:
     - key: cascade-mcp
