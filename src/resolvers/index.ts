@@ -1,6 +1,6 @@
 import Resolver from '@forge/resolver';
 
-import { buildDeps, isDemoMode, jobQueue, repository } from '../bootstrap';
+import { buildDeps, forgeGraphCaller, isDemoMode, jobQueue, repository } from '../bootstrap';
 import { loadConfig } from '../config';
 import { runPipeline } from '../pipeline/run';
 import { newRunId } from '../shared/ids';
@@ -10,6 +10,7 @@ import { buildCorpusCounterfactuals } from '../decisions/counterfactuals';
 import { computeCaseBase } from '../decisions/service';
 import { buildMatrix } from '../decisions/matrix';
 import { searchDecisions } from '../decisions/search';
+import { errorCodeOf } from '../graph/client';
 import { buildRunView } from '../actions/runView';
 import { projectTreeFor } from '../actions/projectTree';
 import { createConfluenceSource } from '../graph/confluenceThread';
@@ -252,6 +253,48 @@ resolver.define('projectTree', async (request: ResolverRequest<{
   });
 
   return result.ok ? result.projection : { error: result.error, message: result.message };
+});
+
+/**
+ * Can the panel reach Teamwork Graph as the acting user?
+ *
+ * This is the one question a browser session can answer and nothing else can.
+ * We deliberately ask for a query key that may not exist: the *error code* is
+ * the signal.
+ *
+ *   QUERY_NOT_FOUND  → the graph was reached with a user session (gate passes;
+ *                       the key is simply not registered yet)
+ *   401 / 403        → no user session or missing scopes (platform limit)
+ *
+ * Either answer is worth having, and it costs one panel load to learn it.
+ */
+resolver.define('graphProbe', async () => {
+  try {
+    const response = await forgeGraphCaller()(
+      'cascade-probe-nonexistent',
+      {},
+    );
+
+    const code = errorCodeOf(response.errors);
+    if (!code && response.data) {
+      return { reachable: true, verdict: 'reachable', code: null };
+    }
+
+    if (code === 'QUERY_NOT_FOUND') {
+      return { reachable: true, verdict: 'reachable', code };
+    }
+
+    return { reachable: false, verdict: 'blocked', code: code ?? 'GRAPH_ERROR' };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const unauthorized = /401|403|unauthori[sz]ed|authentication/i.test(message);
+    return {
+      reachable: false,
+      verdict: unauthorized ? 'no-user-session' : 'error',
+      code: null,
+      message: message.slice(0, 200),
+    };
+  }
 });
 
 resolver.define('searchDecisions', async (request: ResolverRequest<{ text?: string }>) => {

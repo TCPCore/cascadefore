@@ -112,6 +112,23 @@ async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+export interface GraphProbe {
+  reachable: boolean;
+  verdict: 'reachable' | 'blocked' | 'no-user-session' | 'error';
+  code: string | null;
+  message?: string;
+}
+
+/** Answers "can this panel reach Teamwork Graph as the user?" once per load. */
+export async function graphProbe(): Promise<GraphProbe | null> {
+  if (standalone) return null; // no bridge, no user session: nothing to probe
+  try {
+    return await bridgeInvoke<GraphProbe>('graphProbe');
+  } catch {
+    return null;
+  }
+}
+
 export async function health(): Promise<Health> {
   if (standalone) {
     try {

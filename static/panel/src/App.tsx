@@ -44,6 +44,8 @@ export function App(): JSX.Element {
   const [pages, setPages] = useState<PageOption[]>([]);
   const [runs, setRuns] = useState<RunOption[]>([]);
   const [pickerError, setPickerError] = useState<string | null>(null);
+  // One probe per load: does this panel reach Teamwork Graph as the user?
+  const [graph, setGraph] = useState<{ reachable: boolean; verdict: string; code: string | null } | null>(null);
   const [pickersLoaded, setPickersLoaded] = useState(false);
   const [healthState, setHealthState] = useState<Health | null>(null);
   const [intentText, setIntentText] = useState(DEFAULT_GOAL);
@@ -62,6 +64,7 @@ export function App(): JSX.Element {
   useEffect(() => {
     // A failed picker is visible, not silent: an empty dropdown and a broken
     // resolver look identical otherwise.
+    void graphProbe().then(setGraph).catch(() => setGraph(null));
     void Promise.all([recentWorkItems(), recentPages(), recentRuns()])
       .then(([items, pages, runs]) => {
         setWorkItems(items);
@@ -194,6 +197,14 @@ export function App(): JSX.Element {
         <div className="badges">
           {/* The badge says which source the next run will use, not a global
               mode — a page id overrides the seeded graph entirely. */}
+          {graph && (
+            <span
+              className={`badge badge--${graph.reachable ? 'decision' : 'warn'}`}
+              title={graph.code ? `graph code: ${graph.code}` : graph.verdict}
+            >
+              graph {graph.reachable ? 'reachable' : graph.verdict.replace('-', ' ')}
+            </span>
+          )}
           {pageId.trim() ? (
             <span className="badge badge--decision">real Confluence thread</span>
           ) : healthState?.demoMode ? (
