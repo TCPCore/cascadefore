@@ -28,4 +28,13 @@ echo "· panel bundles"
 npm --prefix static/panel run build >/dev/null
 npm --prefix static/panel run build:web >/dev/null
 
+echo "· deployed bundle matches source"
+# Forge uploads static/panel/build verbatim, so a stale committed bundle ships
+# an old UI with no error anywhere. Rebuilding above and diffing catches that.
+if ! git diff --quiet -- static/panel/build; then
+  echo "  static/panel/build is stale — commit the rebuild before deploying"
+  git diff --stat -- static/panel/build
+  exit 1
+fi
+
 echo "all green"

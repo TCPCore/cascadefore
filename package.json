@@ -17,7 +17,7 @@
     "build:web": "npm --prefix static/panel run build:web",
     "serve:web": "npm run build:web && tsx scripts/serve.ts",
     "render:report": "tsx scripts/render.ts",
-    "sandbox": "CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/cascade.db tsx scripts/serve.ts",
+    "sandbox": "npm --prefix static/panel run build:web && CASCADE_SOURCE=live CASCADE_STORE=sqlite CASCADE_DB=/tmp/cascade.db tsx scripts/serve.ts",
     "shots": "node scripts/shoot.mjs",
     "demo:record": "node scripts/record-demo.mjs",
     "a11y": "node scripts/a11y.mjs",

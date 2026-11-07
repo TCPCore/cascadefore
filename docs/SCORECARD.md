@@ -5,6 +5,24 @@ trust it. Updated 2026-11-06.
 
 ---
 
+## One app, three deployments, two builds
+
+Worth stating plainly, because it looks like version duplication and is not:
+
+| Thing | What it is |
+|---|---|
+| **Forge app** | exactly one: `ari:cloud:ecosystem::app/1fcb1899-…`, one manifest |
+| **Environments** | `development`, `staging`, `production` — the same app deployed three times, identical manifest (no `overrides:`), identical variables |
+| **Marketplace listing** | a distribution channel for that same app — not a second app |
+| **Judge path** | the same app, installed from the listing; or the sandbox, which runs the same engine |
+| **Panel builds** | two builds of one source: `build` (deployed to Forge) and `build-web` (local evaluation only, not tracked in git). They differ by one flag: `__STANDALONE__`, which selects the bridge or plain HTTP transport |
+
+Guards added so the copies cannot drift:
+
+- `verify.sh` rebuilds `static/panel/build` and fails if the committed bundle differs — Forge uploads that directory verbatim, so a stale bundle would ship an old UI silently.
+- `build-web` is ignored by git and built on demand by `npm run evaluate` / `npm run sandbox`.
+- Environment variables are the only per-environment configuration and are identical across all three.
+
 ## Technological Implementation
 
 | Claim | Evidence | Checkable by |

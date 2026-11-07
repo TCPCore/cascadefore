@@ -11,3 +11,8 @@ coverage/
 
 # Recorded demo artefacts (large binaries); regenerate with scripts/record-demo.mjs
 artifacts/video/
+
+# The standalone panel bundle is built on demand for local evaluation
+# (`npm run evaluate`). Committing it made the repo look like it shipped two
+# builds; only `static/panel/build` is deployed to Forge.
+static/panel/build-web/
