@@ -31,9 +31,28 @@ const json = (body: unknown, status = 200) => ({
   body: JSON.stringify(body, null, 2),
 });
 
+const DIAGNOSTIC_ACTIONS = new Set(['replay', 'sqlprobe']);
+
 export async function handler(event: { queryParameters?: Record<string, string[]> }) {
   const params = event.queryParameters ?? {};
   const action = params.action?.[0] ?? 'health';
+
+  // `replay` writes to Forge SQL and `sqlprobe` executes statements. An
+  // unguessable URL is not authorisation, so both are off unless the operator
+  // has explicitly set a token on the environment and supplied it here.
+  if (DIAGNOSTIC_ACTIONS.has(action)) {
+    const token = process.env.CASCADE_DIAGNOSTIC_TOKEN;
+    if (!token || params.token?.[0] !== token) {
+      return json(
+        {
+          ok: false,
+          error: 'DIAGNOSTIC_DISABLED',
+          message: 'This action requires CASCADE_DIAGNOSTIC_TOKEN and a matching ?token=.',
+        },
+        403,
+      );
+    }
+  }
 
   try {
     if (action === 'health') {
